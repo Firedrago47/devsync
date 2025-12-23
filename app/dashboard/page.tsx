@@ -131,7 +131,7 @@ export default function DashboardPage() {
                   </div>
                   <Button
                     onClick={handleCreateRoom}
-                    className="w-full bg-neutral-800 hover:bg-neutral-900 dark:bg-neutral-300 dark:hover:bg-neutral-600 h-9"
+                    className="w-full bg-neutral-800 hover:bg-neutral-900 dark:bg-neutral-300 dark:hover:bg-neutral-200 h-9"
                   >
                     <Plus className="mr-2 h-4 w-4" /> Create Project Room
                   </Button>
