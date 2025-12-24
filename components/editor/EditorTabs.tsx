@@ -16,7 +16,7 @@ const EditorTabs = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex h-11 items-center bg-zinc-800 border-b border-zinc-700 px-2 overflow-x-auto no-scrollbar">
+      <div className="flex h-11 items-center bg-neutral-800 border-b border-neutral-700 px-2 overflow-x-auto no-scrollbar">
         {tabs.map((tab) => (
           <Tab
             key={tab.id}
@@ -51,8 +51,8 @@ const Tab = ({ name, isActive, onActivate, onClose }: TabProps) => (
         className={`flex text-sm items-center px-3 py-1 mr-2 rounded cursor-pointer select-none transition-colors
           ${
             isActive
-              ? 'bg-zinc-900 text-white border border-zinc-600'
-              : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+              ? 'bg-neutral-900 text-white border border-neutral-600'
+              : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
           }`}
       >
         <span className="truncate max-w-[120px]">{name}</span>
@@ -64,7 +64,7 @@ const Tab = ({ name, isActive, onActivate, onClose }: TabProps) => (
             e.stopPropagation();
             onClose();
           }}
-          className="ml-2 h-5 w-5 text-zinc-400 hover:text-red-400"
+          className="ml-2 h-5 w-5 text-neutral-400 hover:text-red-400"
           aria-label={`Close ${name}`}
         >
           <X size={14} />
