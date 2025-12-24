@@ -14,8 +14,8 @@ import CursorOverlay from "@/components/editor/CursorOverlay";
 import SplitHandle from "@/components/layout/SplitHandle";
 
 /* ---------- Constants (VS Code–like) ---------- */
-const SIDEBAR = { MIN: 150, MAX: 420, CLOSE: 120, DEFAULT: 256 };
-const PREVIEW = { MIN: 150, MAX: 420, CLOSE: 120, DEFAULT: 256 };
+const SIDEBAR = { MIN: 150, MAX: 420, CLOSE: 120, DEFAULT: 200 };
+const PREVIEW = { MIN: 150, MAX: 420, CLOSE: 120, DEFAULT: 200 };
 const BOTTOM = { MIN: 140, MAX: 400, CLOSE: 100, DEFAULT: 200 };
 
 export default function RoomPage() {

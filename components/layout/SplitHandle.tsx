@@ -20,8 +20,8 @@ const SplitHandle: React.FC<SplitHandleProps> = ({
       className={clsx(
         'transition-colors',
         isVertical
-          ? 'w-1 h-full cursor-col-resize bg-[#2D2D2D] hover:bg-[#3E3E3E]'
-          : 'h-1 w-full cursor-row-resize bg-[#2D2D2D] hover:bg-[#3E3E3E]'
+          ? 'w-0.5 h-full cursor-col-resize bg-[#2D2D2D] hover:bg-[#3E3E3E]'
+          : 'h-0.5 w-full cursor-row-resize bg-[#2D2D2D] hover:bg-[#3E3E3E]'
       )}
     />
   );

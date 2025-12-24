@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <header className="h-12 px-4 flex items-center justify-between bg-zinc-900 border-b border-zinc-700">
+      <header className="h-12 px-4 flex items-center justify-between bg-neutral-900 border-b border-neutral-700">
         {/* Left */}
         <div className="flex items-center gap-3 min-w-0">
           <Tooltip>
@@ -49,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({
                 variant="ghost"
                 size="icon"
                 onClick={onToggleSidebar}
-                className="text-zinc-300 hover:text-white"
+                className="text-neutral-300 hover:text-white"
               >
                 <Menu size={20} />
               </Button>
@@ -62,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({
           </h1>
 
           {roomId && (
-            <span className="ml-2 px-2 py-0.5 bg-zinc-700 text-xs rounded text-zinc-300">
+            <span className="ml-2 px-2 py-0.5 bg-neutral-700 text-xs rounded text-neutral-300">
               Room: {roomId.slice(0, 8)}…
             </span>
           )}
@@ -78,7 +78,7 @@ const Header: React.FC<HeaderProps> = ({
                     onClick={handleCopyRoomId}
                     variant="secondary"
                     size="sm"
-                    className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
+                    className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-200"
                   >
                     <ClipboardCopy size={14} className="mr-1" />
                     Copy ID
@@ -111,7 +111,7 @@ const Header: React.FC<HeaderProps> = ({
                 variant="ghost"
                 size="icon"
                 onClick={onToggleBottomPanel}
-                className="text-zinc-300 hover:text-white"
+                className="text-neutral-300 hover:text-white"
               >
                 <ChevronDown size={20} />
               </Button>

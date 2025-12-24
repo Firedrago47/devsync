@@ -61,7 +61,7 @@ const Terminal: React.FC = () => {
       ref={containerRef}
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      className="w-full h-full bg-[#1E1E1E] text-gray-200 font-mono text-[13px] px-5 py-3 outline-none overflow-y-auto flex flex-col leading-[1.4]"
+      className="w-full h-full bg-neutral-900 text-gray-200 font-mono text-[13px] px-5 py-3 outline-none overflow-y-auto flex flex-col leading-[1.4]"
     >
       {/* Render previous lines */}
       {lines.map((line, i) => (

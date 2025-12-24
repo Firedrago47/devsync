@@ -16,7 +16,7 @@ const EditorTabs = () => {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex h-11 items-center bg-neutral-800 border-b border-neutral-700 px-2 overflow-x-auto no-scrollbar">
+      <div className="flex h-10.5 items-center bg-neutral-900 border-b border-neutral-700 px-2 overflow-x-auto no-scrollbar">
         {tabs.map((tab) => (
           <Tab
             key={tab.id}
@@ -51,8 +51,8 @@ const Tab = ({ name, isActive, onActivate, onClose }: TabProps) => (
         className={`flex text-sm items-center px-3 py-1 mr-2 rounded cursor-pointer select-none transition-colors
           ${
             isActive
-              ? 'bg-neutral-900 text-white border border-neutral-600'
-              : 'bg-neutral-700 text-neutral-300 hover:bg-neutral-600'
+              ? 'bg-neutral-700 text-white border border-neutral-600'
+              : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-600'
           }`}
       >
         <span className="truncate max-w-[120px]">{name}</span>

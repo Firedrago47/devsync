@@ -8,7 +8,7 @@ type OutputProps = {
 
 const Output: React.FC<OutputProps> = ({ logs }) => {
   return (
-    <div className="bg-[#1E1E1E] text-gray-300 font-mono text-[13px] h-full px-5 py-4 overflow-y-auto leading-relaxed">
+    <div className="bg-neutral-900 text-gray-300 font-mono text-[13px] h-full px-5 py-4 overflow-y-auto leading-relaxed">
       {logs.length === 0 && (
         <div className="text-gray-400">[Running] Waiting for code output...</div>
       )}

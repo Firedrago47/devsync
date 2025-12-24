@@ -15,14 +15,14 @@ export default function BottomPanel({ logs }: BottomPanelProps) {
   const [activeTab, setActiveTab] = useState<'output' | 'terminal'>('output');
 
   return (
-    <div className="h-full bg-[#1E1E1E] text-white flex flex-col border-t border-[#2D2D2D]">
+    <div className="h-full bg-neutral-900 text-white flex flex-col border-t border-[#2D2D2D]">
       {/* Tabs */}
       <Tabs
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as 'output' | 'terminal')}
         className="flex flex-col flex-1"
       >
-        <TabsList className="rounded-none bg-[#252526] border-b border-[#2D2D2D] p-0">
+        <TabsList className="rounded-none bg-neutral-900 border border-[#2D2D2D] p-0">
           {(['output', 'terminal'] as const).map((tab) => (
             <TabsTrigger
               key={tab}
