@@ -11,32 +11,9 @@ type ReviewItem = {
   id: string;
   severity: 'error' | 'warning' | 'info';
   category: 'bug' | 'security' | 'performance' | 'style';
-  file: string;
-  range: string;
   message: string;
   confidence: 'low' | 'medium' | 'high';
 };
-
-const mock: ReviewItem[] = [
-  {
-    id: '1',
-    severity: 'warning',
-    category: 'performance',
-    file: 'main.py',
-    range: 'L12–L18',
-    message: 'Loop can be optimized using list comprehension.',
-    confidence: 'high',
-  },
-  {
-    id: '2',
-    severity: 'info',
-    category: 'style',
-    file: 'utils.ts',
-    range: 'L3–L5',
-    message: 'Consider renaming function for clarity.',
-    confidence: 'medium',
-  },
-];
 
 const iconByCategory = {
   bug: <Bug className="h-4 w-4 text-red-400" />,
@@ -48,22 +25,52 @@ const iconByCategory = {
 export default function AIReviewPanel() {
   const [filter, setFilter] =
     useState<'all' | 'error' | 'warning' | 'info'>('all');
+  const [results, setResults] = useState<ReviewItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const { fileName, code, range } = useEditorContext();
 
-  const filtered = mock.filter(
+  const filtered = results.filter(
     (i) => filter === 'all' || i.severity === filter
   );
 
-  const handleRunReview = () => {
-    if (code && range && fileName) {
-      console.log('AI REVIEW → selection', {
-        fileName,
-        range,
-        code,
+  const handleRunReview = async () => {
+    if (!fileName) return;
+
+    setLoading(true);
+    setResults([]);
+
+    try {
+      const res = await fetch('/api/ai/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scope: code ? 'selection' : 'file',
+          file: fileName,
+          language: 'auto',
+          code: code ?? '',
+          range: range ?? null,
+        }),
       });
-    } else if (fileName) {
-      console.log('AI REVIEW → full file', { fileName });
+
+      const data = await res.json();
+
+      if (data.success && Array.isArray(data.results)) {
+        // normalize AI output
+        setResults(
+          data.results.map((r: any, index: number) => ({
+            id: `${index}`,
+            severity: r.severity,
+            category: r.category,
+            message: r.message,
+            confidence: r.confidence,
+          }))
+        );
+      }
+    } catch (err) {
+      console.error('AI Review failed', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,9 +88,13 @@ export default function AIReviewPanel() {
           size="sm"
           variant="secondary"
           onClick={handleRunReview}
-          disabled={!canReview}
+          disabled={!canReview || loading}
         >
-          {code ? 'Review Selection' : 'Review File'}
+          {loading
+            ? 'Reviewing…'
+            : code
+            ? 'Review Selection'
+            : 'Review File'}
         </Button>
       </div>
 
@@ -119,51 +130,48 @@ export default function AIReviewPanel() {
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-2">
           {!fileName && (
-            <div className="text-sm text-neutral-500 text-center py-6">
+            <div className="text-sm text-neutral-500 text-center py-4">
               Open a file to run AI review.
             </div>
           )}
 
-          {fileName &&
-            filtered.map((item) => (
-              <div
-                key={item.id}
-                className="group rounded-md bg-neutral-900/50 p-3 border border-neutral-800 hover:border-neutral-700 transition"
-              >
-                <div className="flex gap-2">
-                  {iconByCategory[item.category]}
+          {fileName && filtered.map((item) => (
+            <div
+              key={item.id}
+              className="group rounded-md bg-neutral-900/50 p-3 border border-neutral-800 hover:border-neutral-700 transition"
+            >
+              <div className="flex gap-2">
+                {iconByCategory[item.category]}
 
-                  <div className="flex-1">
-                    <p className="text-sm text-neutral-200">
-                      {item.message}
-                    </p>
+                <div className="flex-1">
+                  <p className="text-sm text-neutral-200">
+                    {item.message}
+                  </p>
 
-                    <div className="mt-1 flex items-center gap-2 text-xs text-neutral-400">
-                      <span>{item.file}</span>
-                      <span>•</span>
-                      <span>{item.range}</span>
-
-                      <Badge
-                        variant="outline"
-                        className="ml-auto text-[10px]"
-                      >
-                        {item.confidence}
-                      </Badge>
-                    </div>
+                  <div className="mt-1 flex items-center gap-2 text-xs text-neutral-400">
+                    <Badge
+                      variant="outline"
+                      className=" text-[10px]"
+                    >
+                      {item.confidence} confidence
+                    </Badge>
                   </div>
                 </div>
-
-                {/* Actions */}
-                <div className="mt-2 hidden group-hover:flex gap-2">
-                  <Button size="sm" variant="outline">
-                    Explain
-                  </Button>
-                  <Button size="sm">Apply Fix</Button>
-                </div>
               </div>
-            ))}
 
-          {fileName && filtered.length === 0 && (
+              {/* Actions */}
+              <div className="mt-2 hidden group-hover:flex gap-2">
+                <Button size="sm" variant="outline">
+                  Explain
+                </Button>
+                <Button size="sm">
+                  Apply Fix
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          {fileName && !loading && filtered.length === 0 && (
             <div className="text-sm text-neutral-500 text-center py-6">
               No issues found.
             </div>
