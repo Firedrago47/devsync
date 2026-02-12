@@ -28,6 +28,8 @@ export default function DashboardPage() {
 
   const [roomIdInput, setRoomIdInput] = useState("");
   const [projectName, setProjectName] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
 
   /* ---------- Auth Guard ---------- */
 
@@ -52,27 +54,23 @@ export default function DashboardPage() {
 
   /* ---------- Actions ---------- */
 
+  async function handleCreateRoom() {
+    if (!projectName.trim() || !session?.user?.id) return;
+    setIsCreating(true);
 
-async function handleCreateRoom() {
-  if (!projectName.trim() || !session?.user?.id) return;
+    try {
+      const roomId = await createRoom(projectName, session.user.id);
 
-  try {
-    const roomId = await createRoom(
-      projectName,
-      session.user.id
-    );
-
-    router.push(`/room/${roomId}`);
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Unknown room creation error";
-    console.error("Room creation failed:", message, err);
+      router.push(`/room/${roomId}`);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unknown room creation error";
+      console.error("Room creation failed:", message, err);
+    }
   }
-}
-
-
 
   function handleJoinRoom() {
+    setIsJoining(true);
     if (roomIdInput.trim()) {
       router.push(`/room/${roomIdInput.trim()}`);
     }
@@ -150,7 +148,11 @@ async function handleCreateRoom() {
                     disabled={!projectName.trim()}
                     className="w-full h-9"
                   >
-                    <Plus className="mr-2 h-4 w-4" />
+                    {isCreating ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-neutral-300 dark:text-neutral-600" />
+                    ) : (
+                      <Plus className="mr-2 h-4 w-4" />
+                    )}
                     Create Project Room
                   </Button>
                 </div>
@@ -170,7 +172,11 @@ async function handleCreateRoom() {
                     disabled={!roomIdInput.trim()}
                     className="w-full h-9"
                   >
-                    <ArrowRightCircle className="mr-2 h-4 w-4" />
+                    {isJoining ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-neutral-300 dark:text-neutral-600" />
+                    ) : (
+                      <ArrowRightCircle className="mr-2 h-4 w-4" />
+                    )}
                     Join
                   </Button>
                 </div>
