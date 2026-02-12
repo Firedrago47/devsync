@@ -30,6 +30,7 @@ interface TerminalState {
 
   setSession: (session: TerminalSession | null) => void;
   appendLog: (log: TerminalLog) => void;
+  clearLogs: () => void;
   clear: () => void;
 }
 
@@ -42,6 +43,12 @@ export const useTerminalStore = create<TerminalState>((set) => ({
   appendLog: (log) =>
     set((state) => ({
       logs: [...state.logs, log],
+    })),
+
+  clearLogs: () =>
+    set((state) => ({
+      ...state,
+      logs: [],
     })),
 
   clear: () =>

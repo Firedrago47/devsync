@@ -25,7 +25,7 @@ export default function EditorTabs() {
   };
 
   return (
-    <div className="h-8 flex border-b border-neutral-700 bg-neutral-900 overflow-x-auto">
+    <div className="h-8 flex border-b border-neutral-300 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 overflow-x-auto">
       {files.map((file) => {
         const isActive = file.fileId === activeFileId;
         
@@ -33,11 +33,11 @@ export default function EditorTabs() {
           <div
             key={file.fileId}
             className={cn(
-              "flex items-center gap-2 px-3 py-2 text-sm cursor-pointer border border-neutral-800 min-w-fit",
-              "hover:bg-neutral-800 transition-colors",
+              "flex items-center gap-2 px-3 py-2 text-sm cursor-pointer border-r border-neutral-300 dark:border-neutral-800 min-w-fit transition-colors",
+              "hover:bg-neutral-200 dark:hover:bg-neutral-800",
               isActive  
-                ? "bg-neutral-80  0 text-white rounded"
-                : "text-neutral-400"
+                ? "bg-white text-neutral-900 dark:bg-neutral-800 dark:text-white"
+                : "text-neutral-600 dark:text-neutral-400"
             )}
             onClick={() => setActiveFile(file.fileId)}
           >
@@ -47,8 +47,8 @@ export default function EditorTabs() {
 
             <button
               className={cn(
-                "flex items-center justify-center w-4 h-4 rounded hover:bg-neutral-700",
-                "text-neutral-500 hover:text-red-400 transition-colors"
+                "flex items-center justify-center w-4 h-4 rounded hover:bg-neutral-300 dark:hover:bg-neutral-700",
+                "text-neutral-500 dark:text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors"
               )}
               onClick={(e) => handleCloseFile(e, file.fileId)}
               aria-label="Close file"

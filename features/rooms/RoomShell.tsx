@@ -18,6 +18,7 @@ import Sidebar from "@/ui/layout/Sidebar";
 import BottomPanel from "@/ui/layout/BottomPanel";
 import ToolsPanel from "@/ui/layout/ToolsPanel";
 import Header from "@/ui/layout/Header";
+import { startTerminal } from "@/features/terminal/terminal.service";
 
 import EditorTabs from "@/features/editor/EditorTabs";
 import CodeEditor from "@/features/editor/CodeEditor";
@@ -39,15 +40,15 @@ export default function RoomShell({ roomId }: RoomShellProps) {
     (s) => s.awaitingRoleMessage
   );
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen] = useState(true);
   const [bottomOpen, setBottomOpen] = useState(true);
-  const [toolsOpen, setToolsOpen] = useState(true);
+  const [toolsOpen] = useState(true);
   const [sidebarView, setSidebarView] =
     useState<SidebarView>("explorer");
 
   if (roomError) {
     return (
-      <div className="h-full flex items-center justify-center text-red-400">
+      <div className="h-full flex items-center justify-center text-neutral-700 dark:text-neutral-300">
         {roomError}
       </div>
     );
@@ -55,10 +56,10 @@ export default function RoomShell({ roomId }: RoomShellProps) {
 
   if (isAwaitingRoleAssignment) {
     return (
-      <div className="h-full flex flex-col items-center justify-center gap-3 text-neutral-300">
-        <Loader2 className="animate-spin text-neutral-400" />
+      <div className="h-full flex flex-col items-center justify-center gap-3 text-neutral-700 dark:text-neutral-300">
+        <Loader2 className="animate-spin text-neutral-500 dark:text-neutral-400" />
         <p className="text-sm">Waiting for role assignment</p>
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-neutral-600 dark:text-neutral-500">
           {awaitingRoleMessage ?? "The room owner needs to assign your access role before you can enter."}
         </p>
       </div>
@@ -69,19 +70,20 @@ export default function RoomShell({ roomId }: RoomShellProps) {
   if (!room) {
     return (
       <div className="h-full flex items-center justify-center">
-        <Loader2 className="animate-spin text-neutral-400" />
+        <Loader2 className="animate-spin text-neutral-500 dark:text-neutral-400" />
       </div>
     );
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-[#1e1e1e] text-neutral-200">
+    <div className="h-full w-full flex flex-col bg-neutral-100 dark:bg-[#1e1e1e] text-neutral-800 dark:text-neutral-200">
       <Header
         title={room.name}
         roomId={roomId}
-        onToggleSidebar={() => setSidebarOpen((v) => !v)}
-        onToggleBottomPanel={() => setBottomOpen((v) => !v)}
-        onToggleTools={() => setToolsOpen((v) => !v)}
+        onRunProject={() => {
+          setBottomOpen(true);
+          startTerminal(roomId);
+        }}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -115,7 +117,7 @@ export default function RoomShell({ roomId }: RoomShellProps) {
                 <>
                   <ResizableHandle />
                   <ResizablePanel defaultSize={25}>
-                    <BottomPanel roomId={roomId} />
+                    <BottomPanel />
                   </ResizablePanel>
                 </>
               )}

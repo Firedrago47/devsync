@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Awareness } from "y-protocols/awareness";
 import * as monaco from "monaco-editor";
 import { useSession } from "next-auth/react";
+import { useTheme } from "next-themes";
 
 import { getYDoc } from "@/features/collaboration/editor/yjs";
 import { bindMonacoToYText } from "@/features/collaboration/editor/monaco-yjs";
@@ -30,6 +31,7 @@ export default function CodeEditor({ roomId }: CodeEditorProps) {
   const openFiles = useEditorStore((s) => s.openFiles);
   const users = usePresenceStore((s) => s.users);
   const { data: session } = useSession();
+  const { resolvedTheme } = useTheme();
 
   const file = activeFileId ? openFiles[activeFileId] : null;
   const { setSelection, clearSelection } = useEditorContext();
@@ -282,7 +284,7 @@ export default function CodeEditor({ roomId }: CodeEditorProps) {
     <div className="h-full w-full">
       <Editor
         height="100%"
-        theme="vs-dark"
+        theme={resolvedTheme === "dark" ? "vs-dark" : "vs"}
         onMount={handleEditorMount}
         options={{
           minimap: { enabled: false },

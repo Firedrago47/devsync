@@ -242,10 +242,10 @@ export default function FileTree({ roomId }: { roomId: string }) {
                   "group relative flex items-center gap-1.5 py-0.5 text-[13px] select-none cursor-pointer",
                   "transition-all duration-75",
                   isActive && !isRenaming
-                    ? "bg-blue-600/15 text-white border-l-2 border-blue-500"
+                    ? "bg-neutral-200 dark:bg-neutral-700/60 text-neutral-900 dark:text-white border-l-2 border-neutral-500 dark:border-neutral-400"
                     : isHovered
-                    ? "bg-white/5"
-                    : "hover:bg-white/[0.03]",
+                    ? "bg-neutral-200 dark:bg-white/5"
+                    : "hover:bg-neutral-100 dark:hover:bg-white/[0.03]",
                   isFolder && "font-medium"
                 )}
                 style={{
@@ -256,7 +256,11 @@ export default function FileTree({ roomId }: { roomId: string }) {
                 onMouseLeave={() => setHoveredNode(null)}
                 onClick={() => {
                   if (isRenaming) return;
-                  isFolder ? toggleFolder(node.id) : handleOpenFile(node);
+                  if (isFolder) {
+                    toggleFolder(node.id);
+                  } else {
+                    handleOpenFile(node);
+                  }
                 }}
               >
                 {/* Chevron */}
@@ -279,9 +283,9 @@ export default function FileTree({ roomId }: { roomId: string }) {
                     "flex-shrink-0 transition-colors",
                     isFolder
                       ? isOpen
-                        ? "text-yellow-500"
-                        : "text-yellow-600"
-                      : "text-blue-400"
+                        ? "text-neutral-500"
+                        : "text-neutral-600"
+                      : "text-neutral-500"
                   )}
                 />
 
@@ -291,7 +295,7 @@ export default function FileTree({ roomId }: { roomId: string }) {
                     ref={inputRef}
                     type="text"
                     defaultValue={node.name}
-                    className="flex-1 bg-neutral-800 border border-blue-500 rounded px-1.5 py-0.5 text-white outline-none shadow-lg"
+                    className="flex-1 bg-neutral-100 dark:bg-neutral-800 border border-neutral-400 dark:border-neutral-600 rounded px-1.5 py-0.5 text-neutral-900 dark:text-white outline-none shadow-lg"
                     onBlur={(e) => handleRename(node.id, e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -306,7 +310,9 @@ export default function FileTree({ roomId }: { roomId: string }) {
                   <span
                     className={cn(
                       "flex-1 truncate",
-                      isActive ? "text-white font-medium" : "text-neutral-300"
+                      isActive
+                        ? "text-neutral-900 dark:text-white font-medium"
+                        : "text-neutral-700 dark:text-neutral-300"
                     )}
                   >
                     {node.name}
@@ -347,7 +353,7 @@ export default function FileTree({ roomId }: { roomId: string }) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDelete(node)}
-                          className="text-red-400 focus:text-red-400"
+                          className="text-neutral-700 dark:text-neutral-300 focus:text-neutral-900 dark:focus:text-white"
                         >
                           <Trash2 size={14} className="mr-2" />
                           Delete

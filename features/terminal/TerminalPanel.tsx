@@ -1,87 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { getSocket } from "@/features/collaboration/client/socket";
+import { useEffect, useRef } from "react";
 import { useTerminalStore } from "./terminal.store";
-import { cn } from "@/lib/utils";
 
-export default function TerminalPanel({
-  roomId,
-}: {
-  roomId: string;
-}) {
-  const { session, logs } = useTerminalStore();
-  const [input, setInput] = useState("");
+export default function TerminalPanel() {
+  const { logs } = useTerminalStore();
+  const outputRef = useRef<HTMLDivElement>(null);
 
-  function start() {
-    getSocket().emit("terminal:start", { roomId });
-  }
-
-  function stop() {
-    getSocket().emit("terminal:stop", { roomId });
-  }
-
-  function send() {
-    if (!input.trim()) return;
-
-    getSocket().emit("terminal:input", {
-      roomId,
-      input,
-    });
-
-    setInput("");
-  }
+  useEffect(() => {
+    if (!outputRef.current) return;
+    outputRef.current.scrollTop = outputRef.current.scrollHeight;
+  }, [logs]);
 
   return (
-    <div className="h-full bg-black text-green-400 font-mono text-sm">
-      {/* ---------- Header ---------- */}
-      <div className="flex items-center justify-between px-2 py-1 bg-neutral-900 text-white">
-        <span>Terminal</span>
-
-        {session?.status === "running" ? (
-          <button
-            onClick={stop}
-            className="text-red-400 hover:text-red-300"
-          >
-            Stop
-          </button>
-        ) : (
-          <button
-            onClick={start}
-            className="text-green-400 hover:text-green-300"
-          >
-            Run
-          </button>
+    <div className="flex h-full min-h-0 flex-col bg-[#f3f3f3] dark:bg-[#1e1e1e] text-neutral-700 dark:text-[#d4d4d4]">
+      <div
+        ref={outputRef}
+        className="flex-1 overflow-auto px-3 py-2 font-mono text-[12.5px] leading-5"
+      >
+        {logs.length === 0 && (
+          <div className="text-neutral-500 dark:text-[#808080]">No terminal output yet.</div>
         )}
-      </div>
-
-
-      {/* ---------- Input ---------- */}
-      <input
-        className="bg-black text-white outline-none"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            send();
-          }
-        }}
-        placeholder="Enter command…"
-      />
-      
-      {/* ---------- Output ---------- */}
-      <div className="flex-1 overflow-auto p-2 space-y-1">
         {logs.map((log) => (
-          <div
-            key={log.id}
-            className={cn(
-              log.type === "stderr" &&
-                "text-red-400",
-              log.type === "system" &&
-                "text-blue-400"
-            )}
-          >
-            {log.message}
+          <div key={log.id} className="grid grid-cols-[64px_56px_1fr] gap-2">
+            <span className="text-neutral-500 dark:text-[#808080]">
+              {new Date(log.timestamp).toLocaleTimeString()}
+            </span>
+            <span className="uppercase text-neutral-500 dark:text-[#9e9e9e]">
+              {log.type}
+            </span>
+            <span className="whitespace-pre-wrap break-words">
+              {log.message}
+            </span>
           </div>
         ))}
       </div>
