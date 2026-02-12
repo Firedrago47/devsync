@@ -15,9 +15,9 @@ export default function ToolsPanel({ roomId }: ToolsPanelProps) {
   const [tab, setTab] = useState<ToolTab>("ai");
 
   return (
-    <div className="h-full flex flex-col bg-neutral-900 rounded-lg  border-neutral-800 text-sm">
+    <div className="h-full flex flex-col bg-neutral-100 dark:bg-neutral-900 border-l border-neutral-300 dark:border-neutral-800 text-sm">
       {/* Tabs */}
-      <div className="h-8 flex items-center justify-around border-b border-neutral-800">
+      <div className="h-8 flex items-center justify-around border-b border-neutral-300 dark:border-neutral-800">
         <Tab icon={Bot} active={tab === "ai"} onClick={() => setTab("ai")} />
         <Tab icon={Eye} active={tab === "preview"} onClick={() => setTab("preview")} />
         <Tab icon={Bug} active={tab === "debug"} onClick={() => setTab("debug")} />
@@ -27,7 +27,7 @@ export default function ToolsPanel({ roomId }: ToolsPanelProps) {
       {/* Content */}
       <div className="flex-1 overflow-auto">
         {tab === "ai" && (
-          <div className="p-3 text-neutral-400">
+          <div className="p-3 text-neutral-600 dark:text-neutral-400">
             <AIReviewPanel/>
           </div>
         )}
@@ -36,7 +36,7 @@ export default function ToolsPanel({ roomId }: ToolsPanelProps) {
           //   src={`/api/preview/${roomId}`}
           //   className="w-full h-full bg-white"
           // />
-          <div className="p-3 text-neutral-400">
+          <div className="p-3 text-neutral-600 dark:text-neutral-400">
             Preview coming soon…
           </div>
           
@@ -44,13 +44,13 @@ export default function ToolsPanel({ roomId }: ToolsPanelProps) {
 
 
         {tab === "debug" && (
-          <div className="p-3 text-neutral-400">
+          <div className="p-3 text-neutral-600 dark:text-neutral-400">
             Debugger coming soon…
           </div>
         )}
 
         {tab === "runtime" && (
-          <div className="p-3 text-neutral-400">
+          <div className="p-3 text-neutral-600 dark:text-neutral-400">
             Runtime info for room {roomId}
           </div>
         )}
@@ -72,8 +72,8 @@ function Tab({
     <button
       onClick={onClick}
       className={cn(
-        "w-full h-full flex items-center justify-center text-neutral-400 hover:text-white",
-        active && "bg-neutral-800 text-white"
+        "w-full h-full flex items-center justify-center text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-800",
+        active && "bg-neutral-200 text-neutral-900 dark:bg-neutral-800 dark:text-white"
       )}
     >
       <Icon className="w-4 h-4" />
