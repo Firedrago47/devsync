@@ -4,14 +4,40 @@ import { getServerAuth } from "@/features/auth/getServerAuth";
 import CollaborationProvider from "@/features/collaboration/collaboration.provider";
 import RoomShellClient from "@/features/rooms/RoomShellClient";
 
-async function fetchRoom(roomId: string) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/rooms/${roomId}`,
-    { cache: "no-store" }
-  );
+const ROOM_FETCH_TIMEOUT_MS = 10000;
 
-  if (!res.ok) return null;
-  return res.json();
+function getBackendUrl(): string | null {
+  const url =
+    process.env.BACKEND_URL ??
+    process.env.NEXT_PUBLIC_BACKEND_URL ??
+    process.env.NEXT_PUBLIC_WS_URL ??
+    "";
+
+  const trimmed = url.trim();
+  return trimmed ? trimmed : null;
+}
+
+async function fetchRoom(roomId: string) {
+  const backendUrl = getBackendUrl();
+  if (!backendUrl) return null;
+
+  try {
+    const res = await fetch(`${backendUrl}/api/rooms/${roomId}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(ROOM_FETCH_TIMEOUT_MS),
+    });
+
+    if (!res.ok) return null;
+    return res.json();
+  } catch (error) {
+    console.error("fetchRoom failed", {
+      roomId,
+      backendUrl,
+      timeoutMs: ROOM_FETCH_TIMEOUT_MS,
+      error,
+    });
+    return null;
+  }
 }
 
 export default async function RoomPage({
