@@ -178,6 +178,57 @@ export function connect(roomId: string, userId: string) {
 
       eventBus.emit("presence:leave", { userId: left.userId });
     });
+
+    /* ---------- Terminal ---------- */
+    socket.on("terminal:session", (payload: unknown) => {
+      if (!payload || typeof payload !== "object") return;
+      const session = payload as {
+        id?: string;
+        roomId?: string;
+        status?: "idle" | "starting" | "running" | "stopped" | "error";
+      };
+
+      if (
+        typeof session.id !== "string" ||
+        typeof session.roomId !== "string" ||
+        typeof session.status !== "string"
+      ) {
+        return;
+      }
+
+      if (session.roomId !== activeRoomId) return;
+      eventBus.emit("terminal:session", {
+        id: session.id,
+        roomId: session.roomId,
+        status: session.status,
+      });
+    });
+
+    socket.on("terminal:log", (payload: unknown) => {
+      if (!payload || typeof payload !== "object") return;
+      const log = payload as {
+        id?: string;
+        timestamp?: number;
+        message?: string;
+        type?: "stdout" | "stderr" | "system";
+      };
+
+      if (
+        typeof log.id !== "string" ||
+        typeof log.timestamp !== "number" ||
+        typeof log.message !== "string" ||
+        (log.type !== "stdout" && log.type !== "stderr" && log.type !== "system")
+      ) {
+        return;
+      }
+
+      eventBus.emit("terminal:log", {
+        id: log.id,
+        timestamp: log.timestamp,
+        message: log.message,
+        type: log.type,
+      });
+    });
   }
 
   /* ---------- If already connected ---------- */

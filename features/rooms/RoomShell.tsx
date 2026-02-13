@@ -25,6 +25,7 @@ import CodeEditor from "@/features/editor/CodeEditor";
 
 import { SidebarView } from "@/ui/layout/layout.types";
 import { useRoomStore } from "./room.store";
+import { useEditorStore } from "@/features/collaboration/editor/editor.store";
 
 interface RoomShellProps {
   roomId: string;
@@ -39,6 +40,7 @@ export default function RoomShell({ roomId }: RoomShellProps) {
   const awaitingRoleMessage = useRoomStore(
     (s) => s.awaitingRoleMessage
   );
+  const activeFileId = useEditorStore((s) => s.activeFileId);
 
   const [sidebarOpen] = useState(true);
   const [bottomOpen, setBottomOpen] = useState(true);
@@ -82,7 +84,7 @@ export default function RoomShell({ roomId }: RoomShellProps) {
         roomId={roomId}
         onRunProject={() => {
           setBottomOpen(true);
-          startTerminal(roomId);
+          startTerminal(roomId, activeFileId);
         }}
       />
 

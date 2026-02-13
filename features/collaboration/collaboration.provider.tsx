@@ -5,6 +5,7 @@ import { connect, disconnect } from "./client/connection";
 
 import { registerPresenceHandlers } from "./presence/presence.handlers";
 import { registerFSHandlers } from "./filesystem/fs.handlers";
+import { registerTerminalHandlers } from "@/features/terminal/terminal.handlers";
 import { useRoomSnapshot } from "../rooms/room.hooks";
 
 interface CollaborationProviderProps {
@@ -30,6 +31,7 @@ export default function CollaborationProvider({
   const handlersRegisteredRef = useRef(false);
   const unregisterPresenceRef = useRef<(() => void) | null>(null);
   const unregisterFSRef = useRef<(() => void) | null>(null);
+  const unregisterTerminalRef = useRef<(() => void) | null>(null);
 
   // IMPORTANT: subscribe FIRST
   useRoomSnapshot(roomId);
@@ -39,6 +41,7 @@ export default function CollaborationProvider({
     if (!handlersRegisteredRef.current) {
       unregisterPresenceRef.current = registerPresenceHandlers(roomId);
       unregisterFSRef.current = registerFSHandlers(roomId);
+      unregisterTerminalRef.current = registerTerminalHandlers(roomId);
       handlersRegisteredRef.current = true;
     }
 
@@ -49,8 +52,10 @@ export default function CollaborationProvider({
       if (handlersRegisteredRef.current) {
         unregisterPresenceRef.current?.();
         unregisterFSRef.current?.();
+        unregisterTerminalRef.current?.();
         unregisterPresenceRef.current = null;
         unregisterFSRef.current = null;
+        unregisterTerminalRef.current = null;
         handlersRegisteredRef.current = false;
       }
 

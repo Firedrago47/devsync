@@ -2,8 +2,8 @@ import { getSocket } from "../collaboration/client/socket";
 
 const socket = getSocket();
 
-export function startTerminal(roomId: string) {
-  socket.emit("terminal:start", { roomId });
+export function startTerminal(roomId: string, fileId?: string | null) {
+  socket.emit("terminal:start", { roomId, fileId: fileId ?? undefined });
 }
 
 export function stopTerminal(roomId: string) {
