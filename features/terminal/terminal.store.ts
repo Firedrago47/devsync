@@ -1,7 +1,3 @@
-/* ===============================
-   FILE: features/terminal/terminal.store.ts
-=============================== */
-
 import { create } from "zustand";
 
 export type TerminalStatus =
