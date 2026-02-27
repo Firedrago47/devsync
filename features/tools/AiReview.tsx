@@ -1,21 +1,32 @@
 "use client";
 
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 import {
-  AlertTriangle,
-  Bug,
-  FileCode2,
-  Info,
-  ShieldCheck,
+  MessageSquare,
   Sparkles,
+  SendHorizontal,
+  FileCode2,
   Wand2,
-  X,
+  Bug,
+  ShieldCheck,
+  AlertTriangle,
+  Info,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
 import { useEditorContext } from "@/state/editorContext";
-import { cn } from "@/lib/utils";
+
+/* ================= TYPES ================= */
+
+type Tab = "chat" | "review";
+
+type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+};
 
 type ReviewItem = {
   id: string;
@@ -27,48 +38,116 @@ type ReviewItem = {
 
 type Filter = "all" | "error" | "warning" | "info";
 
+/* ================= ICONS ================= */
+
 const iconByCategory = {
-  bug: <Bug className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />,
-  security: <ShieldCheck className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />,
-  performance: <AlertTriangle className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />,
-  style: <Info className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />,
+  bug: <Bug className="h-4 w-4 text-neutral-500" />,
+  security: <ShieldCheck className="h-4 w-4 text-neutral-500" />,
+  performance: <AlertTriangle className="h-4 w-4 text-neutral-500" />,
+  style: <Info className="h-4 w-4 text-neutral-500" />,
 };
 
 const severityStyle: Record<ReviewItem["severity"], string> = {
-  error:
-    "border-l-neutral-500 bg-neutral-100 dark:bg-neutral-900/70 ring-1 ring-neutral-300 dark:ring-neutral-700 text-neutral-800 dark:text-neutral-200",
-  warning:
-    "border-l-neutral-500 bg-neutral-100 dark:bg-neutral-900/70 ring-1 ring-neutral-300 dark:ring-neutral-700 text-neutral-800 dark:text-neutral-200",
-  info:
-    "border-l-neutral-500 bg-neutral-100 dark:bg-neutral-900/70 ring-1 ring-neutral-300 dark:ring-neutral-700 text-neutral-800 dark:text-neutral-200",
+  error: "border-l-neutral-500 bg-neutral-100 dark:bg-neutral-900/70",
+  warning: "border-l-neutral-500 bg-neutral-100 dark:bg-neutral-900/70",
+  info: "border-l-neutral-500 bg-neutral-100 dark:bg-neutral-900/70",
 };
 
+/* ================= MAIN ================= */
+
 export default function AIReviewPanel() {
+  const [tab, setTab] = useState<Tab>("chat");
+
+  /* CHAT */
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatError, setChatError] = useState<string | null>(null);
+
+  /* REVIEW */
   const [filter, setFilter] = useState<Filter>("all");
   const [results, setResults] = useState<ReviewItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
   const [hasRun, setHasRun] = useState(false);
 
   const { fileName, code, range } = useEditorContext();
 
+  /* ================= CHAT STREAM ================= */
+
+  async function handleSend() {
+    const input = chatInput.trim();
+    if (!input || chatLoading) return;
+
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: input,
+    };
+
+    setChatMessages((prev) => [...prev, userMessage]);
+    setChatInput("");
+    setChatLoading(true);
+    setChatError(null);
+
+    try {
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: input,
+          file: fileName ?? "editor.py",
+          code: code ?? "",
+          language: "python",
+        }),
+      });
+
+      if (!res.body) throw new Error("No stream");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      let assistantText = "";
+      const assistantId = crypto.randomUUID();
+
+      setChatMessages((prev) => [
+        ...prev,
+        { id: assistantId, role: "assistant", content: "" },
+      ]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        assistantText += chunk;
+
+        setChatMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId ? { ...m, content: assistantText } : m
+          )
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      setChatError("AI stream failed");
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
+  /* ================= REVIEW ================= */
+
   const filtered = results.filter(
     (i) => filter === "all" || i.severity === filter
   );
-  const counts = results.reduce(
-    (acc, item) => {
-      acc[item.severity] += 1;
-      return acc;
-    },
-    { error: 0, warning: 0, info: 0 }
-  );
 
-  const handleRunReview = async () => {
+  async function handleRunReview() {
     if (!fileName || !code?.trim() || !range) return;
 
-    setLoading(true);
+    setReviewLoading(true);
     setResults([]);
-    setError(null);
+    setReviewError(null);
     setHasRun(true);
 
     try {
@@ -85,207 +164,137 @@ export default function AIReviewPanel() {
       });
 
       const data = await res.json();
+
       if (!res.ok) {
-        setError(data?.error || "AI review request failed");
+        setReviewError(data?.error || "AI review failed");
         return;
       }
 
-      if (data.success && Array.isArray(data.results)) {
-        // normalize AI output
+      if (data.success) {
         setResults(
-          data.results.map((r: ReviewItem, index: number) => ({
-            id: `${index}`,
-            severity: r.severity,
-            category: r.category,
-            message: r.message,
-            confidence: r.confidence,
+          data.results.map((r: ReviewItem, i: number) => ({
+            ...r,
+            id: String(i),
           }))
         );
-      } else {
-        setError("Invalid AI response format");
       }
-    } catch (err) {
-      console.error("AI Review failed", err);
-      setError("Network error while running AI review");
+    } catch {
+      setReviewError("Network error");
     } finally {
-      setLoading(false);
+      setReviewLoading(false);
     }
-  };
-
-  const clearReviewState = () => {
-    setResults([]);
-    setHasRun(false);
-    setError(null);
-    setFilter("all");
-  };
+  }
 
   const canReview = Boolean(fileName && code?.trim() && range);
-  const selectedLineCount =
-    range ? range.endLine - range.startLine + 1 : 0;
-  const filterOptions: Filter[] = ["all", "error", "warning", "info"];
+
+  /* ================= UI ================= */
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-neutral-300 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-950/70 shadow-inner">
-      <div className="border-b border-neutral-300 dark:border-neutral-800 p-3">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="flex items-center gap-2 text-sm font-semibold text-neutral-800 dark:text-neutral-100">
-              <Sparkles className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-              AI Review
-            </p>
-            <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
-              Scan selected code for bugs, security issues, and performance risks.
-            </p>
-          </div>
-          {hasRun && (
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={clearReviewState}
-              className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
-              aria-label="Clear review"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-neutral-300 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-950/70">
 
-        <div className="mt-3 rounded-lg border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900/70 p-2">
-          {fileName && range ? (
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="flex items-center gap-2 text-xs text-neutral-700 dark:text-neutral-300">
-                  <FileCode2 className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
-                  <span className="truncate">{fileName}</span>
-                </p>
-                <p className="mt-1 text-[11px] text-neutral-500 dark:text-neutral-500">
-                  Lines {range.startLine}-{range.endLine} ({selectedLineCount} selected)
-                </p>
-              </div>
-              <Button
-                size="sm"
-                onClick={handleRunReview}
-                disabled={!canReview || loading}
-                className="bg-neutral-800 text-neutral-100 hover:bg-neutral-700 dark:bg-neutral-200 dark:text-neutral-900 dark:hover:bg-neutral-300 disabled:bg-neutral-300 disabled:text-neutral-500 dark:disabled:bg-neutral-700 dark:disabled:text-neutral-400"
-              >
-                <Wand2 className="h-3.5 w-3.5" />
-                {loading ? "Reviewing..." : "Review"}
-              </Button>
-            </div>
-          ) : (
-            <p className="text-xs text-neutral-500 dark:text-neutral-500">
-              Select code in editor to enable AI review.
-            </p>
-          )}
-        </div>
+      {/* TAB HEADER */}
+      <div className="border-b border-neutral-300 dark:border-neutral-800 flex">
+        <TabBtn icon={MessageSquare} label="Chat" active={tab==="chat"} onClick={()=>setTab("chat")} />
+        <TabBtn icon={Sparkles} label="Review" active={tab==="review"} onClick={()=>setTab("review")} />
       </div>
 
-      <div className="border-b border-neutral-300 dark:border-neutral-800 px-3 py-2">
-        <div className="flex flex-wrap items-center gap-2">
-          {filterOptions.map((option) => {
-            const count =
-              option === "all" ? results.length : counts[option];
-            const active = filter === option;
-            return (
-              <button
-                key={option}
-                onClick={() => setFilter(option)}
-                className={cn(
-                  "rounded-full border px-2.5 py-1 text-[11px] transition",
-                  active
-                    ? "border-neutral-500 bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                    : "border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:border-neutral-400 dark:hover:border-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-200"
-                )}
-              >
-                {option.toUpperCase()} {count}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="space-y-2 p-3">
-          {!fileName && (
-            <div className="rounded-lg border border-dashed border-neutral-300 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/60 p-6 text-center text-sm text-neutral-500">
-              Open a file to start AI review.
-            </div>
-          )}
-
-          {fileName && (!code || !range) && (
-            <div className="rounded-lg border border-dashed border-neutral-300 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/60 p-6 text-center text-sm text-neutral-500">
-              Select a code range in the editor to run review.
-            </div>
-          )}
-
-          {error && (
-            <div className="rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900 px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300">
-              {error}
-            </div>
-          )}
-
-          {loading &&
-            [0, 1, 2].map((idx) => (
-              <div
-                key={idx}
-                className="animate-pulse rounded-lg border border-neutral-300 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900/70 p-3"
-              >
-                <div className="h-3 w-1/2 rounded bg-neutral-300 dark:bg-neutral-800" />
-                <div className="mt-2 h-3 w-full rounded bg-neutral-300 dark:bg-neutral-800" />
-                <div className="mt-1 h-3 w-2/3 rounded bg-neutral-300 dark:bg-neutral-800" />
-              </div>
-            ))}
-
-          {!loading &&
-            filtered.map((item) => (
-              <article
-                key={item.id}
-                className={`rounded-lg border border-l-4 border-neutral-800 p-3 ${severityStyle[item.severity]}`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5">{iconByCategory[item.category]}</div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm leading-5 text-neutral-800 dark:text-neutral-100">{item.message}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                      <Badge variant="outline" className="border-neutral-400 dark:border-neutral-700 text-[10px] text-neutral-700 dark:text-neutral-300">
-                        {item.severity}
-                      </Badge>
-                      <Badge variant="outline" className="border-neutral-400 dark:border-neutral-700 text-[10px] text-neutral-700 dark:text-neutral-300">
-                        {item.category}
-                      </Badge>
-                      <Badge variant="outline" className="border-neutral-400 dark:border-neutral-700 text-[10px] text-neutral-700 dark:text-neutral-300">
-                        {item.confidence} confidence
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </article>
-            ))}
-
-          {!loading && fileName && hasRun && !error && results.length === 0 && (
-            <div className="rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900 p-6 text-center text-sm text-neutral-700 dark:text-neutral-300">
-              No issues found in this selection.
-            </div>
-          )}
-
-          {!loading &&
-            fileName &&
-            hasRun &&
-            !error &&
-            results.length > 0 &&
-            filtered.length === 0 && (
-              <div className="rounded-lg border border-neutral-300 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900/60 p-6 text-center text-sm text-neutral-600 dark:text-neutral-400">
-                No {filter.toUpperCase()} findings for this review.
+      {/* ================= CHAT ================= */}
+      {tab === "chat" && (
+        <>
+          <ScrollArea className="flex-1 min-h-0 p-3 space-y-2">
+            {chatMessages.length === 0 && (
+              <div className="text-center text-sm text-neutral-500 mt-10">
+                Start a conversation with AI.
               </div>
             )}
 
-          {!loading && fileName && !hasRun && canReview && (
-            <div className="rounded-lg border border-neutral-300 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900/60 p-6 text-center text-sm text-neutral-500">
-              Run review to generate findings for the current selection.
+            {chatMessages.map((m) => (
+              <div key={m.id} className={m.role==="user"?"flex justify-end":"flex justify-start"}>
+                <div className={
+                  m.role==="user"
+                    ?"max-w-[85%] rounded-lg bg-neutral-800 text-white px-3 py-2 text-sm"
+                    :"max-w-[85%] rounded-lg border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3 py-2 text-sm whitespace-pre-wrap"
+                }>
+                  {m.content}
+                </div>
+              </div>
+            ))}
+
+            {chatLoading && <div className="text-xs text-neutral-500">Thinking...</div>}
+            {chatError && <div className="text-xs text-red-500">{chatError}</div>}
+          </ScrollArea>
+
+          <div className="border-t border-neutral-300 dark:border-neutral-800 p-3 flex gap-2">
+            <input
+              value={chatInput}
+              onChange={(e)=>setChatInput(e.target.value)}
+              onKeyDown={(e)=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();handleSend();}}}
+              placeholder="Ask AI..."
+              className="flex-1 h-9 rounded-md border px-3 text-sm bg-white dark:bg-neutral-900"
+            />
+            <Button size="sm" onClick={handleSend} disabled={chatLoading || !chatInput.trim()}>
+              <SendHorizontal className="h-4 w-4"/>
+            </Button>
+          </div>
+        </>
+      )}
+
+      {/* ================= REVIEW ================= */}
+      {tab === "review" && (
+        <>
+          <div className="border-b border-neutral-300 dark:border-neutral-800 p-3 flex justify-between">
+            <div className="text-xs text-neutral-500">
+              {fileName && range ? `${fileName} (${range.startLine}-${range.endLine})` : "Select code to review"}
             </div>
-          )}
-        </div>
-      </ScrollArea>
+            <Button size="sm" onClick={handleRunReview} disabled={!canReview || reviewLoading}>
+              <Wand2 className="h-4 w-4 mr-1"/>
+              {reviewLoading?"Reviewing":"Review"}
+            </Button>
+          </div>
+
+          <ScrollArea className="flex-1 min-h-0 p-3 space-y-2">
+            {reviewError && <div className="text-sm text-red-500">{reviewError}</div>}
+
+            {!reviewLoading && filtered.map(item=>(
+              <div key={item.id} className={`rounded-lg border border-l-4 p-3 ${severityStyle[item.severity]}`}>
+                <div className="flex gap-3">
+                  {iconByCategory[item.category]}
+                  <div>
+                    <div className="text-sm">{item.message}</div>
+                    <div className="flex gap-1 mt-2">
+                      <Badge variant="outline">{item.severity}</Badge>
+                      <Badge variant="outline">{item.category}</Badge>
+                      <Badge variant="outline">{item.confidence}</Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {!reviewLoading && hasRun && results.length===0 && (
+              <div className="text-sm text-neutral-500">No issues found.</div>
+            )}
+          </ScrollArea>
+        </>
+      )}
     </div>
+  );
+}
+
+/* TAB BUTTON */
+function TabBtn({icon:Icon,label,active,onClick}:{icon:any,label:string,active:boolean,onClick:()=>void}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex-1 h-9 flex items-center justify-center gap-2 text-xs",
+        active
+          ?"bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white"
+          :"text-neutral-500 hover:text-neutral-800 dark:hover:text-white"
+      )}
+    >
+      <Icon className="w-4 h-4"/>
+      {label}
+    </button>
   );
 }
