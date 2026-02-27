@@ -2,7 +2,6 @@
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import AIReviewPanel from '../tools/AiReview';
 
 export default function ToolsPanel() {
   return (
@@ -18,7 +17,6 @@ export default function ToolsPanel() {
         </TabsList>
 
         <TabsContent value="review" className="flex-1 m-0">
-          <AIReviewPanel />
         </TabsContent>
 
         <TabsContent value="suggest" className="flex-1 m-0 p-3 text-sm text-neutral-400">
