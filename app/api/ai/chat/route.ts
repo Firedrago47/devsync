@@ -31,10 +31,10 @@ export async function POST(req: Request) {
       );
     }
 
-    /* wake server */
+    // wake render backend
     await wakeWisdom();
 
-    /* call wisdom chat */
+    // CALL WISDOM STREAM BACKEND
     const wisdomRes = await fetch(WISDOM_CHAT, {
       method: "POST",
       headers: {
@@ -43,26 +43,35 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         message: message,
-        session_id: "devsync-user-1",   // REQUIRED by wisdom
+        session_id: "devsync-user-1",
         file: file,
         code: code,
         language: language
       }),
     });
 
-    const data = await wisdomRes.json();
-
     if (!wisdomRes.ok) {
-      console.log("WISDOM ERROR:", data);
+      const errText = await wisdomRes.text();
+      console.log("WISDOM ERROR:", errText);
       return NextResponse.json(
-        { error: "Wisdom chat failed", details: data },
+        { error: "Wisdom backend error", details: errText },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      reply: data.reply || "No reply from wisdom"
+    //  IMPORTANT: STREAM RESPONSE BACK TO FRONTEND
+    if (!wisdomRes.body) {
+      return NextResponse.json(
+        { error: "No response body from wisdom" },
+        { status: 500 }
+      );
+    }
+
+    return new Response(wisdomRes.body, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Transfer-Encoding": "chunked",
+      },
     });
 
   } catch (err) {
