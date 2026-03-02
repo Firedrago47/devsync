@@ -17,8 +17,6 @@ import { hasRoomSnapshot } from "@/features/collaboration/client/connection";
 import { eventBus } from "@/features/collaboration/client/event-bus";
 
 import { useEditorStore } from "@/features/collaboration/editor/editor.store";
-import { usePresenceStore } from "@/features/collaboration/presence/presence.store";
-import { findCurrentPresenceUser } from "@/features/rooms/identity";
 import { useEditorContext } from "@/state/editorContext";
 
 interface CodeEditorProps {
@@ -29,24 +27,18 @@ export default function CodeEditor({ roomId }: CodeEditorProps) {
   /* ---------- State ---------- */
   const activeFileId = useEditorStore((s) => s.activeFileId);
   const openFiles = useEditorStore((s) => s.openFiles);
-  const users = usePresenceStore((s) => s.users);
   const { data: session } = useSession();
   const { resolvedTheme } = useTheme();
 
   const file = activeFileId ? openFiles[activeFileId] : null;
   const { setSelection, clearSelection } = useEditorContext();
-  const currentUser = useMemo(() => {
-    const fromSession = findCurrentPresenceUser(users, session?.user);
-    if (fromSession) return fromSession;
-    return Object.values(users).find((u) => u.online) ?? null;
-  }, [users, session?.user]);
   const awarenessUser = useMemo(
     () => ({
-      userId: currentUser?.userId ?? session?.user?.id ?? "anonymous",
-      name: currentUser?.name ?? session?.user?.name ?? "Anonymous",
-      color: currentUser?.color ?? "#3b82f6",
+      userId: session?.user?.id ?? "anonymous",
+      name: session?.user?.name ?? "Anonymous",
+      color: "#3b82f6",
     }),
-    [currentUser, session?.user?.id, session?.user?.name]
+    [session?.user?.id, session?.user?.name]
   );
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);

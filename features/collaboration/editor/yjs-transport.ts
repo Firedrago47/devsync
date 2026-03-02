@@ -10,20 +10,17 @@ export function bindYjsToSocket(
   fileId: string
 ) {
   const socket = getSocket();
-  let isSynced = false;
   let destroyed = false;
   let disposed = false;
   
   const emitJoin = () => {
     if (destroyed) return;
-    isSynced = false;
     socket.emit("yjs:join", { roomId, fileId });
   };
 
   /* ---------- Local → Server ---------- */
   const onLocalUpdate = (update: Uint8Array, origin: unknown) => {
     if (origin === "server") return;
-    if (!isSynced) return;
 
     socket.emit("yjs:update", {
       roomId,
@@ -64,7 +61,6 @@ export function bindYjsToSocket(
         : new Uint8Array(normalized.update);
 
     Y.applyUpdate(doc, update, "server");
-    isSynced = true;
   };
 
   socket.on("yjs:sync", onSync);
@@ -73,17 +69,11 @@ export function bindYjsToSocket(
   /* ---------- Join document ---------- */
   emitJoin();
 
-  /* ---------- Failsafe ---------- */
-  const syncTimeout = setTimeout(() => {
-    isSynced = true;
-  }, 1500);
-
   /* ---------- Cleanup ---------- */
   return () => {
     if (disposed) return;
     disposed = true;
     destroyed = true;
-    clearTimeout(syncTimeout);
 
     doc.off("update", onLocalUpdate);
     socket.off("yjs:update", onRemoteUpdate);
