@@ -53,30 +53,31 @@ export function bindMonacoToYText(
     if (transaction.local) return;
 
     const edits: monaco.editor.IIdentifiedSingleEditOperation[] = [];
-    let index = 0;
+    // Cursor in the pre-change (old) document.
+    let oldIndex = 0;
 
     for (const part of event.delta) {
       if (part.retain) {
-        index += part.retain;
+        oldIndex += part.retain;
         continue;
       }
 
       if (part.delete) {
         edits.push({
-          range: toRangeFromOffsets(model, index, index + part.delete),
+          range: toRangeFromOffsets(model, oldIndex, oldIndex + part.delete),
           text: "",
           forceMoveMarkers: true,
         });
+        oldIndex += part.delete;
         continue;
       }
 
       if (typeof part.insert === "string") {
         edits.push({
-          range: toRangeFromOffsets(model, index, index),
+          range: toRangeFromOffsets(model, oldIndex, oldIndex),
           text: part.insert,
           forceMoveMarkers: true,
         });
-        index += part.insert.length;
       }
     }
 
@@ -84,7 +85,15 @@ export function bindMonacoToYText(
 
     applyingRemote = true;
     try {
-      model.applyEdits(edits);
+      // Apply from right-to-left so offsets remain stable against the old model.
+      const stableEdits = edits.sort((a, b) => {
+        if (a.range.startLineNumber !== b.range.startLineNumber) {
+          return b.range.startLineNumber - a.range.startLineNumber;
+        }
+        return b.range.startColumn - a.range.startColumn;
+      });
+
+      model.applyEdits(stableEdits);
     } catch (err) {
       console.error("Error applying Yjs delta to Monaco:", err);
     } finally {
