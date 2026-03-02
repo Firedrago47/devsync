@@ -87,8 +87,6 @@ export function bindMonacoToYText(
       model.applyEdits(edits);
     } catch (err) {
       console.error("Error applying Yjs delta to Monaco:", err);
-      // Fallback to full sync if incremental patch fails.
-      syncFromYText();
     } finally {
       applyingRemote = false;
     }

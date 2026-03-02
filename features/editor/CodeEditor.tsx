@@ -40,6 +40,14 @@ export default function CodeEditor({ roomId }: CodeEditorProps) {
     if (fromSession) return fromSession;
     return Object.values(users).find((u) => u.online) ?? null;
   }, [users, session?.user]);
+  const awarenessUser = useMemo(
+    () => ({
+      userId: currentUser?.userId ?? session?.user?.id ?? "anonymous",
+      name: currentUser?.name ?? session?.user?.name ?? "Anonymous",
+      color: currentUser?.color ?? "#3b82f6",
+    }),
+    [currentUser, session?.user?.id, session?.user?.name]
+  );
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof monaco | null>(null);
@@ -153,7 +161,6 @@ export default function CodeEditor({ roomId }: CodeEditorProps) {
     if (
       !snapshotReady ||
       !file ||
-      !currentUser ||
       !editorRef.current ||
       !monacoRef.current
     ) {
@@ -183,9 +190,13 @@ export default function CodeEditor({ roomId }: CodeEditorProps) {
       const model = entry.model;
       if (model.isDisposed()) return;
 
-      if (editor.getModel() !== null && !(editor as any)._isDisposed) {
+      if (
+        editor.getModel() !== model &&
+        editor.getModel() !== null &&
+        !(editor as any)._isDisposed
+      ) {
         editor.setModel(model);
-      } else {
+      } else if ((editor as any)._isDisposed) {
         return;
       }
 
@@ -200,9 +211,9 @@ export default function CodeEditor({ roomId }: CodeEditorProps) {
       const awareness = new Awareness(doc);
       awareness.setLocalState({
         user: {
-          userId: currentUser.userId,
-          name: currentUser.name,
-          color: currentUser.color,
+          userId: awarenessUser.userId,
+          name: awarenessUser.name,
+          color: awarenessUser.color,
         },
         cursor: null,
       });
@@ -253,7 +264,9 @@ export default function CodeEditor({ roomId }: CodeEditorProps) {
     snapshotReady,
     file?.fileId,
     file?.language,
-    currentUser?.userId,
+    awarenessUser.userId,
+    awarenessUser.name,
+    awarenessUser.color,
   ]);
 
   /* ---------- Error ---------- */
