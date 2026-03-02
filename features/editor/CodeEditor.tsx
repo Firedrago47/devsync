@@ -196,7 +196,7 @@ export default function CodeEditor({ roomId }: CodeEditorProps) {
       const doc = getYDoc(roomId, file.fileId);
       const ytext = doc.getText("content");
 
-      const unbindText = bindMonacoToYText(model, ytext);
+      const unbindText = bindMonacoToYText(model, ytext, editor);
       const unbindTransport = bindYjsToSocket(doc, roomId, file.fileId);
 
       /* ---------- Awareness ---------- */

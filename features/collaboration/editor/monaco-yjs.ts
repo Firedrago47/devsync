@@ -3,25 +3,10 @@
 import type * as monaco from "monaco-editor";
 import * as Y from "yjs";
 
-function toRangeFromOffsets(
-  model: monaco.editor.ITextModel,
-  startOffset: number,
-  endOffset: number
-) {
-  const start = model.getPositionAt(startOffset);
-  const end = model.getPositionAt(endOffset);
-
-  return {
-    startLineNumber: start.lineNumber,
-    startColumn: start.column,
-    endLineNumber: end.lineNumber,
-    endColumn: end.column,
-  };
-}
-
 export function bindMonacoToYText(
   model: monaco.editor.ITextModel,
-  ytext: Y.Text
+  ytext: Y.Text,
+  editor?: monaco.editor.IStandaloneCodeEditor
 ) {
   let applyingRemote = false;
   let applyingLocal = false;
@@ -36,9 +21,40 @@ export function bindMonacoToYText(
     const next = ytext.toString();
     if (model.getValue() === next) return;
 
+    const savedSelections = editor
+      ?.getSelections()
+      ?.map((selection) => ({
+        start: model.getOffsetAt(selection.getStartPosition()),
+        end: model.getOffsetAt(selection.getEndPosition()),
+      }));
+
     applyingRemote = true;
     try {
       model.setValue(next);
+
+      if (editor && savedSelections && savedSelections.length > 0) {
+        const maxOffset = model.getValueLength();
+        editor.setSelections(
+          savedSelections.map((selection) => {
+            const start = model.getPositionAt(
+              Math.max(0, Math.min(selection.start, maxOffset))
+            );
+            const end = model.getPositionAt(
+              Math.max(0, Math.min(selection.end, maxOffset))
+            );
+            return {
+              selectionStartLineNumber: start.lineNumber,
+              selectionStartColumn: start.column,
+              positionLineNumber: end.lineNumber,
+              positionColumn: end.column,
+              startLineNumber: start.lineNumber,
+              startColumn: start.column,
+              endLineNumber: end.lineNumber,
+              endColumn: end.column,
+            };
+          })
+        );
+      }
     } finally {
       applyingRemote = false;
     }
@@ -48,57 +64,13 @@ export function bindMonacoToYText(
   syncFromYText();
 
   const yObserver = (event: Y.YTextEvent, transaction: Y.Transaction) => {
+    void event;
     if (disposed || model.isDisposed()) return;
     if (applyingLocal) return;
     if (transaction.local) return;
-
-    const edits: monaco.editor.IIdentifiedSingleEditOperation[] = [];
-    // Cursor in the pre-change (old) document.
-    let oldIndex = 0;
-
-    for (const part of event.delta) {
-      if (part.retain) {
-        oldIndex += part.retain;
-        continue;
-      }
-
-      if (part.delete) {
-        edits.push({
-          range: toRangeFromOffsets(model, oldIndex, oldIndex + part.delete),
-          text: "",
-          forceMoveMarkers: true,
-        });
-        oldIndex += part.delete;
-        continue;
-      }
-
-      if (typeof part.insert === "string") {
-        edits.push({
-          range: toRangeFromOffsets(model, oldIndex, oldIndex),
-          text: part.insert,
-          forceMoveMarkers: true,
-        });
-      }
-    }
-
-    if (edits.length === 0) return;
-
-    applyingRemote = true;
-    try {
-      // Apply from right-to-left so offsets remain stable against the old model.
-      const stableEdits = edits.sort((a, b) => {
-        if (a.range.startLineNumber !== b.range.startLineNumber) {
-          return b.range.startLineNumber - a.range.startLineNumber;
-        }
-        return b.range.startColumn - a.range.startColumn;
-      });
-
-      model.applyEdits(stableEdits);
-    } catch (err) {
-      console.error("Error applying Yjs delta to Monaco:", err);
-    } finally {
-      applyingRemote = false;
-    }
+    // Correctness-first sync for concurrent edits.
+    // Yjs doc is authoritative; Monaco mirrors it.
+    syncFromYText();
   };
 
   ytext.observe(yObserver);
