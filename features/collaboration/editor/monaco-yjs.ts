@@ -3,6 +3,42 @@
 import type * as monaco from "monaco-editor";
 import * as Y from "yjs";
 
+function mapOffsetThroughDelta(
+  offset: number,
+  delta: Y.YTextEvent["delta"],
+  assoc: -1 | 1 = 1
+) {
+  let oldPos = 0;
+  let newPos = 0;
+
+  for (const part of delta) {
+    if (part.retain) {
+      const retainEnd = oldPos + part.retain;
+      if (offset < retainEnd || (offset === retainEnd && assoc < 0)) {
+        return newPos + (offset - oldPos);
+      }
+      oldPos = retainEnd;
+      newPos += part.retain;
+      continue;
+    }
+
+    if (part.delete) {
+      const deleteEnd = oldPos + part.delete;
+      if (offset <= deleteEnd) {
+        return newPos;
+      }
+      oldPos = deleteEnd;
+      continue;
+    }
+
+    if (typeof part.insert === "string") {
+      newPos += part.insert.length;
+    }
+  }
+
+  return newPos + (offset - oldPos);
+}
+
 export function bindMonacoToYText(
   model: monaco.editor.ITextModel,
   ytext: Y.Text,
@@ -17,11 +53,15 @@ export function bindMonacoToYText(
     return () => {};
   }
 
-  const syncFromYText = () => {
+  const syncFromYText = (
+    mappedSelections?: Array<{ start: number; end: number }>
+  ) => {
     const next = ytext.toString();
     if (model.getValue() === next) return;
 
-    const savedSelections = editor
+    const savedSelections =
+      mappedSelections ??
+      editor
       ?.getSelections()
       ?.map((selection) => ({
         start: model.getOffsetAt(selection.getStartPosition()),
@@ -64,13 +104,25 @@ export function bindMonacoToYText(
   syncFromYText();
 
   const yObserver = (event: Y.YTextEvent, transaction: Y.Transaction) => {
-    void event;
     if (disposed || model.isDisposed()) return;
     if (applyingLocal) return;
     if (transaction.local) return;
+
+    const mappedSelections = editor
+      ?.getSelections()
+      ?.map((selection) => {
+        const start = model.getOffsetAt(selection.getStartPosition());
+        const end = model.getOffsetAt(selection.getEndPosition());
+
+        return {
+          start: mapOffsetThroughDelta(start, event.delta, -1),
+          end: mapOffsetThroughDelta(end, event.delta, 1),
+        };
+      });
+
     // Correctness-first sync for concurrent edits.
     // Yjs doc is authoritative; Monaco mirrors it.
-    syncFromYText();
+    syncFromYText(mappedSelections);
   };
 
   ytext.observe(yObserver);
