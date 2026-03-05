@@ -16,6 +16,8 @@ import {
 
 let activeRoomId: string | null = null;
 let activeUserId: string | null = null;
+let activeUserName: string | null = null;
+let activeUserEmail: string | null = null;
 let isConnecting = false;
 let hasSnapshot = false;
 let listenersRegistered = false;
@@ -40,10 +42,16 @@ function emitJoinIfReady() {
   socket.emit("room:join", {
     roomId: activeRoomId,
     userId: activeUserId,
+    name: activeUserName ?? undefined,
+    email: activeUserEmail ?? undefined,
   });
 }
 
-export function connect(roomId: string, userId: string) {
+export function connect(
+  roomId: string,
+  userId: string,
+  profile?: { name?: string | null; email?: string | null }
+) {
   if (isConnecting) return;
 
   isConnecting = true;
@@ -52,6 +60,8 @@ export function connect(roomId: string, userId: string) {
   const socket = getSocket();
   activeRoomId = roomId;
   activeUserId = userId;
+  activeUserName = profile?.name?.trim() || null;
+  activeUserEmail = profile?.email?.trim() || null;
 
   if (!socket.connected) {
     socket.connect();
@@ -121,6 +131,11 @@ export function connect(roomId: string, userId: string) {
       console.error("❌ Connection error:", err);
       isConnecting = false;
       hasSnapshot = false;
+      eventBus.emit("room:error", {
+        roomId: activeRoomId ?? undefined,
+        code: "connection_error",
+        message: "Unable to connect to realtime server",
+      });
     });
 
     /* ---------- Filesystem ---------- */
@@ -246,6 +261,8 @@ export function disconnect(roomId: string) {
 
   activeRoomId = null;
   activeUserId = null;
+  activeUserName = null;
+  activeUserEmail = null;
   hasSnapshot = false;
 
   eventBus.emit("room:left", { roomId });

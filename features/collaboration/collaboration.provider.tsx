@@ -11,6 +11,8 @@ import { useRoomSnapshot } from "../rooms/room.hooks";
 interface CollaborationProviderProps {
   roomId: string;
   userId: string;
+  userName?: string | null;
+  userEmail?: string | null;
   children: React.ReactNode;
 }
 
@@ -25,6 +27,8 @@ interface CollaborationProviderProps {
 export default function CollaborationProvider({
   roomId,
   userId,
+  userName,
+  userEmail,
   children,
 }: CollaborationProviderProps) {
   const joinedRef = useRef(false);
@@ -45,7 +49,10 @@ export default function CollaborationProvider({
       handlersRegisteredRef.current = true;
     }
 
-    connect(roomId, userId);
+    connect(roomId, userId, {
+      name: userName,
+      email: userEmail,
+    });
     joinedRef.current = true;
 
     return () => {
@@ -65,7 +72,7 @@ export default function CollaborationProvider({
         joinedRef.current = false;
       }
     };
-  }, [roomId, userId]);
+  }, [roomId, userId, userName, userEmail]);
 
   return <>{children}</>;
 }

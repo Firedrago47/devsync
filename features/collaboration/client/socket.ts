@@ -27,8 +27,6 @@ export function getSocket(): Socket {
 
   if (!socket) {
     const wsUrl =
-      process.env.NEXT_PUBLIC_SOCKET_URL ??
-      process.env.NEXT_PUBLIC_WS_URL ??
       process.env.NEXT_PUBLIC_BACKEND_URL ??
       window.location.origin;
 
@@ -44,8 +42,9 @@ export function getSocket(): Socket {
     socket =
       globalThis.__devsyncSocket ??
       io(wsUrl, {
-        // Allow long-polling fallback for browsers/networks where direct WS fails.
-        transports: ["polling", "websocket"],
+        // Polling from localhost -> remote can fail with xhr poll error.
+        // Use websocket transport only.
+        transports: ["websocket"],
         upgrade: true,
         autoConnect: false,
         reconnection: true,

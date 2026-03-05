@@ -17,6 +17,8 @@ import { hasRoomSnapshot } from "@/features/collaboration/client/connection";
 import { eventBus } from "@/features/collaboration/client/event-bus";
 
 import { useEditorStore } from "@/features/collaboration/editor/editor.store";
+import { useRoomStore } from "@/features/rooms/room.store";
+import { resolveMyRole } from "@/features/rooms/identity";
 import { useEditorContext } from "@/state/editorContext";
 
 interface CodeEditorProps {
@@ -27,6 +29,7 @@ export default function CodeEditor({ roomId }: CodeEditorProps) {
   /* ---------- State ---------- */
   const activeFileId = useEditorStore((s) => s.activeFileId);
   const openFiles = useEditorStore((s) => s.openFiles);
+  const members = useRoomStore((s) => s.members);
   const { data: session } = useSession();
   const { resolvedTheme } = useTheme();
 
@@ -40,6 +43,8 @@ export default function CodeEditor({ roomId }: CodeEditorProps) {
     }),
     [session?.user?.id, session?.user?.name]
   );
+  const myRole = resolveMyRole(members, session?.user);
+  const isReadOnly = myRole === "viewer";
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof monaco | null>(null);
@@ -294,6 +299,7 @@ export default function CodeEditor({ roomId }: CodeEditorProps) {
         options={{
           minimap: { enabled: false },
           automaticLayout: true,
+          readOnly: isReadOnly,
           fontSize: 14,
           lineNumbers: "on",
           wordWrap: "on",

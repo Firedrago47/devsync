@@ -4,8 +4,10 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 import {
   ResizablePanelGroup,
@@ -26,13 +28,17 @@ import CodeEditor from "@/features/editor/CodeEditor";
 import { SidebarView } from "@/ui/layout/layout.types";
 import { useRoomStore } from "./room.store";
 import { useEditorStore } from "@/features/collaboration/editor/editor.store";
+import { resolveMyRole } from "./identity";
+import { eventBus } from "@/features/collaboration/client/event-bus";
 
 interface RoomShellProps {
   roomId: string;
 }
 
 export default function RoomShell({ roomId }: RoomShellProps) {
+  const { data: session } = useSession();
   const room = useRoomStore((s) => s.room);
+  const members = useRoomStore((s) => s.members);
   const roomError = useRoomStore((s) => s.error);
   const isAwaitingRoleAssignment = useRoomStore(
     (s) => s.isAwaitingRoleAssignment
@@ -47,6 +53,39 @@ export default function RoomShell({ roomId }: RoomShellProps) {
   const [toolsOpen] = useState(true);
   const [sidebarView, setSidebarView] =
     useState<SidebarView>("explorer");
+  const myRole = resolveMyRole(members, session?.user);
+  const myUserId = session?.user?.id ?? null;
+  const notifiedJoinRequestsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (myRole !== "owner") return;
+
+    const offJoin = eventBus.on("presence:join", (user) => {
+      if (myUserId && user.userId === myUserId) return;
+      toast(`${user.name} joined the room`);
+    });
+
+    return () => {
+      offJoin();
+    };
+  }, [myRole, myUserId]);
+
+  useEffect(() => {
+    if (myRole !== "owner") return;
+
+    const offJoinRequest = eventBus.on("room:join-request", (request) => {
+      if (request.roomId !== roomId) return;
+      const key = `${request.userId}:${request.requestedAt}`;
+      if (notifiedJoinRequestsRef.current.has(key)) return;
+      notifiedJoinRequestsRef.current.add(key);
+
+      toast(`${request.name} is waiting for approval`);
+    });
+
+    return () => {
+      offJoinRequest();
+    };
+  }, [myRole, roomId]);
 
   if (roomError) {
     return (
