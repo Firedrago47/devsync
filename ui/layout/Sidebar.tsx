@@ -24,6 +24,7 @@ import {
 
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -71,6 +72,7 @@ export default function Sidebar({ roomId, view, projectName = "Project" }: Sideb
   const myRole = resolveMyRole(members, session?.user);
   const canEdit = myRole !== "viewer";
   const isOwner = myRole === "owner";
+  const myUserId = session?.user?.id ?? "";
 
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -101,12 +103,17 @@ export default function Sidebar({ roomId, view, projectName = "Project" }: Sideb
   };
 
   const handleAssignRole = (userId: string, role: "editor" | "viewer") => {
+    const request = joinRequests.find((item) => item.userId === userId);
     assignRoomMemberRole({
       roomId,
       userId,
       role,
     });
+    toast(`Assigned ${role} role to ${request?.name ?? userId}`);
   };
+
+  const getMemberRole = (userId: string) =>
+    members.find((m) => m.userId === userId)?.role;
 
   return (
     <div className="h-full flex flex-col bg-neutral-100 dark:bg-neutral-900 border-r border-neutral-300 dark:border-neutral-800">
@@ -360,7 +367,9 @@ export default function Sidebar({ roomId, view, projectName = "Project" }: Sideb
                               {u.name}
                             </p>
                             <p className="text-[10px] text-neutral-500 dark:text-neutral-500 truncate">
-                              {u.cursor?.fileId ? (
+                              {getMemberRole(u.userId) ? (
+                                <span className="uppercase">{getMemberRole(u.userId)}</span>
+                              ) : u.cursor?.fileId ? (
                                 <span className="text-neutral-600 dark:text-neutral-300">Editing</span>
                               ) : (
                                 "Online"
@@ -380,7 +389,23 @@ export default function Sidebar({ roomId, view, projectName = "Project" }: Sideb
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem>View Profile</DropdownMenuItem>
-                                <DropdownMenuItem>Follow</DropdownMenuItem>
+                                {isOwner &&
+                                  u.userId !== myUserId &&
+                                  getMemberRole(u.userId) !== "owner" && (
+                                    <>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        onClick={() => handleAssignRole(u.userId, "editor")}
+                                      >
+                                        Assign Editor
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => handleAssignRole(u.userId, "viewer")}
+                                      >
+                                        Assign Viewer
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -414,7 +439,9 @@ export default function Sidebar({ roomId, view, projectName = "Project" }: Sideb
                             <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400 truncate">
                               {u.name}
                             </p>
-                            <p className="text-[10px] text-neutral-600 truncate">Offline</p>
+                            <p className="text-[10px] text-neutral-600 truncate">
+                              {getMemberRole(u.userId)?.toUpperCase() ?? "OFFLINE"}
+                            </p>
                           </div>
                         </div>
                       ))}
