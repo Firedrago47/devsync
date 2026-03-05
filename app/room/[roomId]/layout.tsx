@@ -1,8 +1,6 @@
 import type { ReactNode } from "react";
 import { Toaster } from "sonner";
 
-export const dynamic = "force-dynamic";
-
 interface RoomLayoutProps {
   children: ReactNode;
   params: Promise<{

@@ -66,7 +66,7 @@ export default function DashboardPage() {
       const message =
         err instanceof Error ? err.message : "Unknown room creation error";
       console.error("Room creation failed:", message, err);
-    }
+    } 
   }
 
   function handleJoinRoom() {
