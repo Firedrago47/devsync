@@ -212,8 +212,8 @@ export default function AIReviewPanel() {
               <div key={m.id} className={m.role==="user"?"flex justify-end":"flex justify-start"}>
                 <div className={
                   m.role==="user"
-                    ?"max-w-[85%] rounded-lg bg-neutral-800 text-white px-3 py-2 text-sm"
-                    :"max-w-[85%] rounded-lg border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3 py-2 text-sm whitespace-pre-wrap"
+                    ?"max-w-[85%] mb-2 rounded-lg bg-neutral-800 text-white px-3 py-2 text-sm"
+                    :"max-w-[85%] mb-2 rounded-lg border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3 py-2 text-sm whitespace-pre-wrap"
                 }>
                   {m.content}
                 </div>
@@ -287,7 +287,7 @@ function TabBtn({icon:Icon,label,active,onClick}:{icon:any,label:string,active:b
     <button
       onClick={onClick}
       className={cn(
-        "flex-1 h-9 flex items-center justify-center gap-2 text-xs",
+        "flex-1 h-9 flex items-center justify-center gap-2 text-xs cursor-pointer transition-colors",
         active
           ?"bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white"
           :"text-neutral-500 hover:text-neutral-800 dark:hover:text-white"

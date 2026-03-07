@@ -14,6 +14,7 @@ import type { Room, RoomMember } from "@/features/rooms/room.types";
 import type {
   RoomErrorPayload,
   RoomJoinRequestPayload,
+  CollabMessagePayload,
 } from "./socket.contract";
 
 /* ---------- Room snapshot ---------- */
@@ -49,6 +50,9 @@ type EventMap = {
   /* -------- Terminal -------- */
   "terminal:session": TerminalSession;
   "terminal:log": TerminalLog;
+
+  /* -------- Collab chat -------- */
+  "collab:message": CollabMessagePayload;
 };
 
 type Handler<T> = (payload: T) => void;

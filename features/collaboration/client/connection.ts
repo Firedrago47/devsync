@@ -11,6 +11,7 @@ import {
   toPresenceUserPayload,
   toRoomErrorPayload,
   toRoomJoinRequestPayload,
+  toCollabMessagePayload,
   type RoomSnapshotPayload,
 } from "./socket.contract";
 
@@ -243,6 +244,15 @@ export function connect(
         message: log.message,
         type: log.type,
       });
+    });
+
+    /* ---------- Collab chat ---------- */
+    socket.on("collab:message", (payload: unknown) => {
+      const message = toCollabMessagePayload(payload);
+      if (!message) return;
+      if (message.roomId !== activeRoomId) return;
+
+      eventBus.emit("collab:message", message);
     });
   }
 

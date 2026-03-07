@@ -6,6 +6,7 @@ import { connect, disconnect } from "./client/connection";
 import { registerPresenceHandlers } from "./presence/presence.handlers";
 import { registerFSHandlers } from "./filesystem/fs.handlers";
 import { registerTerminalHandlers } from "@/features/terminal/terminal.handlers";
+import { registerCollabChatHandlers } from "./chat/chat.handlers";
 import { useRoomSnapshot } from "../rooms/room.hooks";
 
 interface CollaborationProviderProps {
@@ -36,6 +37,7 @@ export default function CollaborationProvider({
   const unregisterPresenceRef = useRef<(() => void) | null>(null);
   const unregisterFSRef = useRef<(() => void) | null>(null);
   const unregisterTerminalRef = useRef<(() => void) | null>(null);
+  const unregisterCollabRef = useRef<(() => void) | null>(null);
 
   // IMPORTANT: subscribe FIRST
   useRoomSnapshot(roomId);
@@ -46,6 +48,7 @@ export default function CollaborationProvider({
       unregisterPresenceRef.current = registerPresenceHandlers(roomId);
       unregisterFSRef.current = registerFSHandlers(roomId);
       unregisterTerminalRef.current = registerTerminalHandlers(roomId);
+      unregisterCollabRef.current = registerCollabChatHandlers(roomId);
       handlersRegisteredRef.current = true;
     }
 
@@ -60,9 +63,11 @@ export default function CollaborationProvider({
         unregisterPresenceRef.current?.();
         unregisterFSRef.current?.();
         unregisterTerminalRef.current?.();
+        unregisterCollabRef.current?.();
         unregisterPresenceRef.current = null;
         unregisterFSRef.current = null;
         unregisterTerminalRef.current = null;
+        unregisterCollabRef.current = null;
         handlersRegisteredRef.current = false;
       }
 

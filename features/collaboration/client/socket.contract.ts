@@ -37,7 +37,7 @@ export interface RoomErrorPayload {
   code?: string;
 }
 
-export interface RoomJoinRequestPayload extends RoomJoinRequest {}
+export type RoomJoinRequestPayload = RoomJoinRequest;
 
 export interface FSCreatePayload {
   roomId: string;
@@ -83,6 +83,20 @@ export interface PresenceUserEventPayload {
 export interface PresenceLeaveEventPayload {
   roomId?: string;
   userId: string;
+}
+
+export type CollabMessageChannel = "room" | "mentor";
+export type CollabSenderRole = "member" | "mentor" | "mentee";
+
+export interface CollabMessagePayload {
+  id: string;
+  roomId: string;
+  channel: CollabMessageChannel;
+  senderId: string;
+  senderName: string;
+  senderRole: CollabSenderRole;
+  text: string;
+  timestamp: number;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -309,5 +323,42 @@ export function toPresenceLeavePayload(
   return {
     roomId: typeof payload.roomId === "string" ? payload.roomId : undefined,
     userId: payload.userId,
+  };
+}
+
+export function toCollabMessagePayload(
+  payload: unknown
+): CollabMessagePayload | null {
+  if (!isRecord(payload)) return null;
+
+  if (
+    typeof payload.id !== "string" ||
+    typeof payload.roomId !== "string" ||
+    (payload.channel !== "room" && payload.channel !== "mentor") ||
+    typeof payload.senderId !== "string" ||
+    typeof payload.senderName !== "string" ||
+    (payload.senderRole !== "member" &&
+      payload.senderRole !== "mentor" &&
+      payload.senderRole !== "mentee") ||
+    typeof payload.text !== "string"
+  ) {
+    return null;
+  }
+
+  const text = payload.text.trim();
+  if (!text) return null;
+
+  return {
+    id: payload.id,
+    roomId: payload.roomId,
+    channel: payload.channel,
+    senderId: payload.senderId,
+    senderName: payload.senderName,
+    senderRole: payload.senderRole,
+    text,
+    timestamp:
+      typeof payload.timestamp === "number" && Number.isFinite(payload.timestamp)
+        ? payload.timestamp
+        : Date.now(),
   };
 }
