@@ -19,7 +19,15 @@ import {
   LayoutDashboard,
   Sun,
   Moon,
+  DoorOpen,
 } from "lucide-react";
+
+type DashboardRoom = {
+  id: string;
+  name: string;
+  ownerId: string;
+  role: "owner" | "editor" | "viewer";
+};
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -30,6 +38,9 @@ export default function DashboardPage() {
   const [projectName, setProjectName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const [rooms, setRooms] = useState<DashboardRoom[]>([]);
+  const [roomsLoading, setRoomsLoading] = useState(false);
+  const [roomsError, setRoomsError] = useState<string | null>(null);
 
   /* ---------- Auth Guard ---------- */
 
@@ -38,6 +49,59 @@ export default function DashboardPage() {
       router.push("/auth");
     }
   }, [status, router]);
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    async function loadRooms() {
+      setRoomsLoading(true);
+      setRoomsError(null);
+      try {
+        const backendUrl =
+          process.env.NEXT_PUBLIC_BACKEND_URL ?? window.location.origin;
+        const userId = session?.user?.id;
+        if (!userId) return;
+
+        const url = new URL("/api/rooms", backendUrl);
+        url.searchParams.set("userId", userId);
+
+        const res = await fetch(url.toString(), {
+          signal: controller.signal,
+        });
+
+        const data = (await res.json().catch(() => ({}))) as {
+          rooms?: DashboardRoom[];
+          error?: string;
+        };
+
+        if (!res.ok) {
+          throw new Error(data.error ?? "Failed to load rooms");
+        }
+
+        if (cancelled) return;
+
+        const list = Array.isArray(data.rooms) ? data.rooms : [];
+        setRooms(list);
+      } catch (err) {
+        if (cancelled) return;
+        const message =
+          err instanceof Error ? err.message : "Failed to load rooms";
+        setRoomsError(message);
+      } finally {
+        if (!cancelled) setRoomsLoading(false);
+      }
+    }
+
+    void loadRooms();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [session?.user?.id]);
 
   if (status === "loading") {
     return (
@@ -66,7 +130,9 @@ export default function DashboardPage() {
       const message =
         err instanceof Error ? err.message : "Unknown room creation error";
       console.error("Room creation failed:", message, err);
-    } 
+    } finally {
+      setIsCreating(false);
+    }
   }
 
   function handleJoinRoom() {
@@ -188,6 +254,64 @@ export default function DashboardPage() {
             <div className="px-5 py-3 text-xs text-neutral-500 dark:text-neutral-400 flex justify-between">
               <span>Signed in as {session.user?.name}</span>
               <span>Secure OAuth authentication</span>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm">
+            <div className="p-5">
+              <h2 className="text-lg font-medium text-neutral-800 dark:text-neutral-200 mb-1">
+                Your Rooms
+              </h2>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                Quickly rejoin rooms you created or already joined
+              </p>
+
+              {roomsLoading && (
+                <div className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading your rooms...
+                </div>
+              )}
+
+              {!roomsLoading && roomsError && (
+                <div className="text-sm text-red-600 dark:text-red-400">
+                  {roomsError}
+                </div>
+              )}
+
+              {!roomsLoading && !roomsError && rooms.length === 0 && (
+                <div className="text-sm text-neutral-500 dark:text-neutral-400">
+                  No rooms found yet.
+                </div>
+              )}
+
+              {!roomsLoading && !roomsError && rooms.length > 0 && (
+                <div className="space-y-2">
+                  {rooms.map((room) => (
+                    <div
+                      key={room.id}
+                      className="flex items-center justify-between rounded-md border border-neutral-200 dark:border-neutral-700 px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 truncate">
+                          {room.name}
+                        </p>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                          {room.id} • {room.role.toUpperCase()}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => router.push(`/room/${room.id}`)}
+                        className="h-8"
+                      >
+                        <DoorOpen className="mr-2 h-4 w-4" />
+                        Join
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
