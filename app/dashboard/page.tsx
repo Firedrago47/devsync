@@ -8,6 +8,7 @@ import { createRoom } from "@/features/rooms/room.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Toggle } from "@/components/ui/toggle";
 import { useTheme } from "next-themes";
 
@@ -263,13 +264,23 @@ export default function DashboardPage() {
                 Your Rooms
               </h2>
               <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
-                Quickly rejoin rooms you created or already joined
+                Quickly rejoin existing rooms you created or already joined
               </p>
 
               {roomsLoading && (
-                <div className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading your rooms...
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between rounded-md border border-neutral-200 dark:border-neutral-700 px-3 py-2"
+                    >
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-3 w-28" />
+                      </div>
+                      <Skeleton className="h-8 w-20" />
+                    </div>
+                  ))}
                 </div>
               )}
 
