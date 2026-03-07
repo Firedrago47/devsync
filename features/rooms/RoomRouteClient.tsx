@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 
 import CollaborationProvider from "@/features/collaboration/collaboration.provider";
 import RoomShellClient from "@/features/rooms/RoomShellClient";
+import { Loader2 } from "lucide-react";
 
 interface RoomRouteClientProps {
   roomId: string;
@@ -31,6 +32,7 @@ export default function RoomRouteClient({ roomId }: RoomRouteClientProps) {
   if (status === "loading") {
     return (
       <div className="h-full flex items-center justify-center text-neutral-500">
+        <Loader2 className="animate-spin text-neutral-500 dark:text-neutral-400" />
         Loading room...
       </div>
     );
