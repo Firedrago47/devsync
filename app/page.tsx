@@ -48,22 +48,24 @@ export default function HomePage() {
           {/* Info */}
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white">
-              Collaborative Coding Environment
+              Build Together, Contribute Better
             </h2>
             <p className="text-neutral-600 dark:text-neutral-400">
-              A secure, real-time code editor for teams to collaborate efficiently.
+              DevSync helps strengthen the FOSS community by teaching developers
+              how to collaborate and contribute to open-source projects with
+              confidence.
             </p>
 
             <div className="space-y-4">
               <Feature
                 icon={<Users />}
-                title="Real-time Collaboration"
-                text="See edits, cursors, and file changes live."
+                title="Learn by Collaborating"
+                text="Pair with others in real time and learn contribution workflows hands-on."
               />
               <Feature
                 icon={<Lock />}
-                title="Secure OAuth Authentication"
-                text="Sign in with GitHub or Google. No passwords stored."
+                title="Open-Source Contribution Ready"
+                text="Use a practical environment designed to help developers contribute faster and better."
               />
             </div>
           </div>
