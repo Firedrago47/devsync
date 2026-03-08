@@ -4,7 +4,7 @@ import { useState } from "react";
 import AIReviewPanel from "@/features/tools/AiReview";
 import CollabPanel from "@/features/tools/CollabPanel";
 import { cn } from "@/lib/utils";
-import { Bot, Group, User, User2, UserCheck, Users2 } from "lucide-react";
+import { Bot, Users2 } from "lucide-react";
 
 interface ToolsPanelProps {
   roomId: string;
@@ -46,7 +46,8 @@ export default function ToolsPanel({ roomId }: ToolsPanelProps) {
 
       <div className="flex-1 overflow-hidden">
         <div className="p-3 h-full">
-          {section === "ai" ? <AIReviewPanel /> : <CollabPanel roomId={roomId} />}
+          {section === "ai" && <AIReviewPanel />}
+          {section === "collab" && <CollabPanel roomId={roomId} />}
         </div>
       </div>
     </div>
