@@ -99,6 +99,11 @@ export interface CollabMessagePayload {
   timestamp: number;
 }
 
+export interface CollabHistoryPayload {
+  roomId: string;
+  messages: CollabMessagePayload[];
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object";
 }
@@ -360,5 +365,26 @@ export function toCollabMessagePayload(
       typeof payload.timestamp === "number" && Number.isFinite(payload.timestamp)
         ? payload.timestamp
         : Date.now(),
+  };
+}
+
+export function toCollabHistoryPayload(
+  payload: unknown
+): CollabHistoryPayload | null {
+  if (!isRecord(payload) || typeof payload.roomId !== "string") {
+    return null;
+  }
+
+  if (!Array.isArray(payload.messages)) {
+    return null;
+  }
+
+  const messages = payload.messages
+    .map((message) => toCollabMessagePayload(message))
+    .filter((message): message is CollabMessagePayload => message !== null);
+
+  return {
+    roomId: payload.roomId,
+    messages,
   };
 }

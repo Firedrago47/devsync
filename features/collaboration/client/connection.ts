@@ -12,6 +12,7 @@ import {
   toRoomErrorPayload,
   toRoomJoinRequestPayload,
   toCollabMessagePayload,
+  toCollabHistoryPayload,
   type RoomSnapshotPayload,
 } from "./socket.contract";
 
@@ -253,6 +254,14 @@ export function connect(
       if (message.roomId !== activeRoomId) return;
 
       eventBus.emit("collab:message", message);
+    });
+
+    socket.on("collab:history", (payload: unknown) => {
+      const history = toCollabHistoryPayload(payload);
+      if (!history) return;
+      if (history.roomId !== activeRoomId) return;
+
+      eventBus.emit("collab:history", history);
     });
   }
 

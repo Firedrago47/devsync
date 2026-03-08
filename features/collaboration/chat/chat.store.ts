@@ -4,6 +4,7 @@ import type { CollabMessagePayload } from "@/features/collaboration/client/socke
 interface CollabChatState {
   messages: CollabMessagePayload[];
   addMessage: (message: CollabMessagePayload) => void;
+  setMessages: (messages: CollabMessagePayload[]) => void;
   clear: () => void;
 }
 
@@ -25,6 +26,21 @@ export const useCollabChatStore = create<CollabChatState>((set) => ({
 
       return { messages: next.slice(next.length - MAX_MESSAGES) };
     }),
+
+  setMessages: (messages) => {
+    const deduped = new Map<string, CollabMessagePayload>();
+    for (const message of messages) {
+      deduped.set(message.id, message);
+    }
+
+    const list = [...deduped.values()];
+    const trimmed =
+      list.length <= MAX_MESSAGES
+        ? list
+        : list.slice(list.length - MAX_MESSAGES);
+
+    set({ messages: trimmed });
+  },
 
   clear: () => set({ messages: [] }),
 }));

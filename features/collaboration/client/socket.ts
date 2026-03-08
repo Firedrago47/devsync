@@ -42,9 +42,8 @@ export function getSocket(): Socket {
     socket =
       globalThis.__devsyncSocket ??
       io(wsUrl, {
-        // Polling from localhost -> remote can fail with xhr poll error.
-        // Use websocket transport only.
-        transports: ["websocket"],
+        // Try websocket first, but keep polling as fallback for flaky networks/proxies.
+        transports: ["websocket", "polling"],
         upgrade: true,
         autoConnect: false,
         reconnection: true,

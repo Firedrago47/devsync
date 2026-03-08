@@ -15,6 +15,7 @@ import type {
   RoomErrorPayload,
   RoomJoinRequestPayload,
   CollabMessagePayload,
+  CollabHistoryPayload,
 } from "./socket.contract";
 
 /* ---------- Room snapshot ---------- */
@@ -53,6 +54,7 @@ type EventMap = {
 
   /* -------- Collab chat -------- */
   "collab:message": CollabMessagePayload;
+  "collab:history": CollabHistoryPayload;
 };
 
 type Handler<T> = (payload: T) => void;
