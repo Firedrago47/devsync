@@ -104,6 +104,41 @@ export interface CollabHistoryPayload {
   messages: CollabMessagePayload[];
 }
 
+export interface WebRTCPeer {
+  socketId: string;
+  userId: string;
+  name: string;
+  muted: boolean;
+}
+
+export interface WebRTCPeersPayload {
+  roomId: string;
+  peers: WebRTCPeer[];
+}
+
+export interface WebRTCPeerEventPayload {
+  roomId: string;
+  peer: WebRTCPeer;
+}
+
+export interface WebRTCPeerLeftPayload {
+  roomId: string;
+  socketId: string;
+  userId?: string;
+}
+
+export interface WebRTCSignalPayload {
+  roomId: string;
+  fromSocketId: string;
+  sdp: RTCSessionDescriptionInit;
+}
+
+export interface WebRTCIceCandidatePayload {
+  roomId: string;
+  fromSocketId: string;
+  candidate: RTCIceCandidateInit;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object";
 }
@@ -386,5 +421,112 @@ export function toCollabHistoryPayload(
   return {
     roomId: payload.roomId,
     messages,
+  };
+}
+
+function toWebRTCPeer(payload: unknown): WebRTCPeer | null {
+  if (!isRecord(payload)) return null;
+  if (
+    typeof payload.socketId !== "string" ||
+    typeof payload.userId !== "string" ||
+    typeof payload.name !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    socketId: payload.socketId,
+    userId: payload.userId,
+    name: payload.name,
+    muted: typeof payload.muted === "boolean" ? payload.muted : false,
+  };
+}
+
+export function toWebRTCPeersPayload(
+  payload: unknown
+): WebRTCPeersPayload | null {
+  if (!isRecord(payload) || typeof payload.roomId !== "string") return null;
+  if (!Array.isArray(payload.peers)) return null;
+
+  const peers = payload.peers
+    .map((peer) => toWebRTCPeer(peer))
+    .filter((peer): peer is WebRTCPeer => peer !== null);
+
+  return {
+    roomId: payload.roomId,
+    peers,
+  };
+}
+
+export function toWebRTCPeerEventPayload(
+  payload: unknown
+): WebRTCPeerEventPayload | null {
+  if (!isRecord(payload) || typeof payload.roomId !== "string") return null;
+  const peer = toWebRTCPeer(payload.peer);
+  if (!peer) return null;
+
+  return {
+    roomId: payload.roomId,
+    peer,
+  };
+}
+
+export function toWebRTCPeerLeftPayload(
+  payload: unknown
+): WebRTCPeerLeftPayload | null {
+  if (
+    !isRecord(payload) ||
+    typeof payload.roomId !== "string" ||
+    typeof payload.socketId !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    roomId: payload.roomId,
+    socketId: payload.socketId,
+    userId: typeof payload.userId === "string" ? payload.userId : undefined,
+  };
+}
+
+export function toWebRTCSignalPayload(
+  payload: unknown
+): WebRTCSignalPayload | null {
+  if (
+    !isRecord(payload) ||
+    typeof payload.roomId !== "string" ||
+    typeof payload.fromSocketId !== "string" ||
+    !isRecord(payload.sdp) ||
+    (payload.sdp.type !== "offer" &&
+      payload.sdp.type !== "answer" &&
+      payload.sdp.type !== "pranswer" &&
+      payload.sdp.type !== "rollback")
+  ) {
+    return null;
+  }
+
+  return {
+    roomId: payload.roomId,
+    fromSocketId: payload.fromSocketId,
+    sdp: payload.sdp as unknown as RTCSessionDescriptionInit,
+  };
+}
+
+export function toWebRTCIceCandidatePayload(
+  payload: unknown
+): WebRTCIceCandidatePayload | null {
+  if (
+    !isRecord(payload) ||
+    typeof payload.roomId !== "string" ||
+    typeof payload.fromSocketId !== "string" ||
+    !isRecord(payload.candidate)
+  ) {
+    return null;
+  }
+
+  return {
+    roomId: payload.roomId,
+    fromSocketId: payload.fromSocketId,
+    candidate: payload.candidate as RTCIceCandidateInit,
   };
 }

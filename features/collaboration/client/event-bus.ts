@@ -16,6 +16,11 @@ import type {
   RoomJoinRequestPayload,
   CollabMessagePayload,
   CollabHistoryPayload,
+  WebRTCPeersPayload,
+  WebRTCPeerEventPayload,
+  WebRTCPeerLeftPayload,
+  WebRTCSignalPayload,
+  WebRTCIceCandidatePayload,
 } from "./socket.contract";
 
 /* ---------- Room snapshot ---------- */
@@ -55,6 +60,15 @@ type EventMap = {
   /* -------- Collab chat -------- */
   "collab:message": CollabMessagePayload;
   "collab:history": CollabHistoryPayload;
+
+  /* -------- Voice/WebRTC -------- */
+  "webrtc:peers": WebRTCPeersPayload;
+  "webrtc:peer-joined": WebRTCPeerEventPayload;
+  "webrtc:peer-updated": WebRTCPeerEventPayload;
+  "webrtc:peer-left": WebRTCPeerLeftPayload;
+  "webrtc:offer": WebRTCSignalPayload;
+  "webrtc:answer": WebRTCSignalPayload;
+  "webrtc:ice-candidate": WebRTCIceCandidatePayload;
 };
 
 type Handler<T> = (payload: T) => void;

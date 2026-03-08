@@ -13,6 +13,11 @@ import {
   toRoomJoinRequestPayload,
   toCollabMessagePayload,
   toCollabHistoryPayload,
+  toWebRTCPeersPayload,
+  toWebRTCPeerEventPayload,
+  toWebRTCPeerLeftPayload,
+  toWebRTCSignalPayload,
+  toWebRTCIceCandidatePayload,
   type RoomSnapshotPayload,
 } from "./socket.contract";
 
@@ -262,6 +267,63 @@ export function connect(
       if (history.roomId !== activeRoomId) return;
 
       eventBus.emit("collab:history", history);
+    });
+
+    /* ---------- Voice/WebRTC ---------- */
+    socket.on("webrtc:peers", (payload: unknown) => {
+      const peers = toWebRTCPeersPayload(payload);
+      if (!peers) return;
+      if (peers.roomId !== activeRoomId) return;
+
+      eventBus.emit("webrtc:peers", peers);
+    });
+
+    socket.on("webrtc:peer-joined", (payload: unknown) => {
+      const joined = toWebRTCPeerEventPayload(payload);
+      if (!joined) return;
+      if (joined.roomId !== activeRoomId) return;
+
+      eventBus.emit("webrtc:peer-joined", joined);
+    });
+
+    socket.on("webrtc:peer-updated", (payload: unknown) => {
+      const updated = toWebRTCPeerEventPayload(payload);
+      if (!updated) return;
+      if (updated.roomId !== activeRoomId) return;
+
+      eventBus.emit("webrtc:peer-updated", updated);
+    });
+
+    socket.on("webrtc:peer-left", (payload: unknown) => {
+      const left = toWebRTCPeerLeftPayload(payload);
+      if (!left) return;
+      if (left.roomId !== activeRoomId) return;
+
+      eventBus.emit("webrtc:peer-left", left);
+    });
+
+    socket.on("webrtc:offer", (payload: unknown) => {
+      const offer = toWebRTCSignalPayload(payload);
+      if (!offer) return;
+      if (offer.roomId !== activeRoomId) return;
+
+      eventBus.emit("webrtc:offer", offer);
+    });
+
+    socket.on("webrtc:answer", (payload: unknown) => {
+      const answer = toWebRTCSignalPayload(payload);
+      if (!answer) return;
+      if (answer.roomId !== activeRoomId) return;
+
+      eventBus.emit("webrtc:answer", answer);
+    });
+
+    socket.on("webrtc:ice-candidate", (payload: unknown) => {
+      const ice = toWebRTCIceCandidatePayload(payload);
+      if (!ice) return;
+      if (ice.roomId !== activeRoomId) return;
+
+      eventBus.emit("webrtc:ice-candidate", ice);
     });
   }
 

@@ -19,6 +19,7 @@ import ActivityBar from "@/ui/layout/ActivityBar";
 import Sidebar from "@/ui/layout/Sidebar";
 import BottomPanel from "@/ui/layout/BottomPanel";
 import ToolsPanel from "@/ui/layout/ToolsPanel";
+import VoiceOverlayDock from "@/ui/layout/VoiceOverlayDock";
 import Header from "@/ui/layout/Header";
 import { startTerminal } from "@/features/terminal/terminal.service";
 
@@ -117,7 +118,7 @@ export default function RoomShell({ roomId }: RoomShellProps) {
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-neutral-100 dark:bg-[#1e1e1e] text-neutral-800 dark:text-neutral-200">
+    <div className="relative h-full w-full flex flex-col bg-neutral-100 dark:bg-[#1e1e1e] text-neutral-800 dark:text-neutral-200">
       <Header
         title={room.name}
         roomId={roomId}
@@ -129,23 +130,26 @@ export default function RoomShell({ roomId }: RoomShellProps) {
 
       <div className="flex flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal" className="flex-1">
-          <ActivityBar
-            active={sidebarView}
-            onSelect={setSidebarView}
-          />
+          <ResizablePanel defaultSize={22} minSize={4} maxSize={30}>
+            <div className="h-full flex min-h-0">
+              <ActivityBar
+                active={sidebarView}
+                onSelect={setSidebarView}
+              />
 
-          {sidebarOpen && (
-            <>
-              <ResizablePanel defaultSize={18} maxSize={25}>
-                <Sidebar
-                  view={sidebarView}
-                  roomId={roomId}
-                  projectName={room.name}
-                />
-              </ResizablePanel>
-              <ResizableHandle />
-            </>
-          )}
+              {sidebarOpen && (
+                <div className="flex-1 min-w-0">
+                  <Sidebar
+                    view={sidebarView}
+                    roomId={roomId}
+                    projectName={room.name}
+                  />
+                </div>
+              )}
+            </div>
+          </ResizablePanel>
+
+          <ResizableHandle />
 
           <ResizablePanel minSize={40}>
             <ResizablePanelGroup direction="vertical" className="h-full">
@@ -168,13 +172,15 @@ export default function RoomShell({ roomId }: RoomShellProps) {
           {toolsOpen && (
             <>
               <ResizableHandle />
-              <ResizablePanel defaultSize={22}>
+              <ResizablePanel defaultSize={28} >
                 <ToolsPanel roomId={roomId} />
               </ResizablePanel>
             </>
           )}
         </ResizablePanelGroup>
       </div>
+
+      <VoiceOverlayDock roomId={roomId} />
     </div>
   );
 }
