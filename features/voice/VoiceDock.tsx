@@ -273,46 +273,46 @@ export default function VoiceDock({ roomId }: VoiceDockProps) {
   }, [remoteStreams]);
 
   return (
-    <div className="rounded-2xl border border-[#1e1f22] bg-[#2b2d31] text-[#dbdee1] overflow-hidden">
-      <div className="px-3 py-2 border-b border-[#1e1f22] bg-[#232428]">
+    <div className="overflow-hidden rounded-2xl border border-neutral-300 bg-neutral-100 text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100">
+      <div className="border-b border-neutral-300 bg-neutral-200 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-800/70">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
-            <Volume2 className="w-3.5 h-3.5 text-[#b5bac1]" />
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-[#b5bac1]">
+            <Volume2 className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-300" />
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-300">
               Voice Channel
             </span>
           </div>
-          <span className="text-[10px] text-[#949ba4]">
+          <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
             {peers.length + (joined ? 1 : 0)} connected
           </span>
         </div>
       </div>
 
-      <div className="px-3 py-2 border-b border-[#1e1f22]">
-        <div className="flex items-center gap-2 rounded-md bg-[#1f9a5d]/15 text-[#3ba55d] px-2 py-1.5">
-          <Radio className="w-3.5 h-3.5" />
+      <div className="border-b border-neutral-300 px-3 py-2 dark:border-neutral-800">
+        <div className="flex items-center gap-2 rounded-md bg-emerald-100 px-2 py-1.5 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+          <Radio className="h-3.5 w-3.5" />
           <span className="text-[12px] font-medium truncate">
             {joined ? "Voice Connected" : "Room Voice"}
           </span>
         </div>
 
-        {error && <p className="mt-2 text-[11px] text-[#f23f43]">{error}</p>}
+        {error && <p className="mt-2 text-[11px] text-red-600 dark:text-red-400">{error}</p>}
       </div>
 
       <div className="px-3 py-2 space-y-1 max-h-28 overflow-auto">
         {joined && (
-          <div className="flex items-center justify-between rounded-md px-2 py-1.5 bg-[#232428]">
-            <span className="text-[12px] font-medium truncate text-[#ffffff]">You</span>
-            <span className="text-[10px] text-[#b5bac1]">{micEnabled ? "Live" : "Muted"}</span>
+          <div className="flex items-center justify-between rounded-md bg-neutral-200 px-2 py-1.5 dark:bg-neutral-800/70">
+            <span className="text-[12px] font-medium truncate text-neutral-900 dark:text-neutral-100">You</span>
+            <span className="text-[10px] text-neutral-600 dark:text-neutral-300">{micEnabled ? "Live" : "Muted"}</span>
           </div>
         )}
         {peers.map((peer) => (
           <div
             key={peer.socketId}
-            className="flex items-center justify-between rounded-md px-2 py-1.5 bg-[#232428]"
+            className="flex items-center justify-between rounded-md bg-neutral-200 px-2 py-1.5 dark:bg-neutral-800/70"
           >
-            <span className="text-[12px] truncate text-[#dbdee1]">{peer.name}</span>
-            <span className="text-[10px] text-[#b5bac1]">{peer.muted ? "Muted" : "Live"}</span>
+            <span className="text-[12px] truncate text-neutral-800 dark:text-neutral-200">{peer.name}</span>
+            <span className="text-[10px] text-neutral-600 dark:text-neutral-300">{peer.muted ? "Muted" : "Live"}</span>
             <audio
               autoPlay
               ref={(el) => {
@@ -326,16 +326,16 @@ export default function VoiceDock({ roomId }: VoiceDockProps) {
           </div>
         ))}
         {!joined && peers.length === 0 && (
-          <div className="text-[11px] text-[#949ba4] px-1 py-1">Join to connect voice.</div>
+          <div className="px-1 py-1 text-[11px] text-neutral-500 dark:text-neutral-400">Join to connect voice.</div>
         )}
       </div>
 
-      <div className="px-3 py-2 border-t border-[#1e1f22] bg-[#232428]">
+      <div className="border-t border-neutral-300 bg-neutral-200 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-800/70">
         <div className="flex items-center gap-2">
           {!joined ? (
             <Button
               size="sm"
-              className="h-8 px-3 text-[11px] bg-[#3ba55d] hover:bg-[#2d7d46] text-white"
+              className="h-8 bg-emerald-600 px-3 text-[11px] text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700"
               onClick={startVoice}
             >
               <Phone className="w-3.5 h-3.5 mr-1.5" />
@@ -345,7 +345,8 @@ export default function VoiceDock({ roomId }: VoiceDockProps) {
             <>
               <Button
                 size="icon"
-                className="h-8 w-8 rounded-full bg-[#3a3d42] hover:bg-[#4e5258] text-[#dbdee1]"
+                variant="secondary"
+                className="h-8 w-8 rounded-full"
                 onClick={toggleMic}
                 title={micEnabled ? "Mute" : "Unmute"}
               >
