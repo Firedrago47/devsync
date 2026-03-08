@@ -58,7 +58,7 @@ export default function Header({
           pressed={resolvedTheme === "dark"}
           onPressedChange={(pressed) => setTheme(pressed ? "dark" : "light")}
           aria-label="Toggle theme"
-          className="h-8 w-8 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-800"
+          className="h-8 w-8 bg-neutral dark:bg-neutral-900 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-800"
         >
           {resolvedTheme === "dark" ? (
             <Sun size={14} />
@@ -73,7 +73,7 @@ export default function Header({
               onClick={onRunProject}
               variant="secondary"
               size="sm"
-              className="text-xs bg-white dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200"
+              className="text-xs bg-neutral dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200"
             >
               <Play size={10} />
             </Button>
@@ -87,7 +87,7 @@ export default function Header({
               onClick={handleCopyRoomId}
               variant="secondary"
               size="sm"
-              className="text-xs bg-white dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200"
+              className="text-xs bg-neutral dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200"
             >
               <ClipboardCopy size={8} className="" />
             </Button>

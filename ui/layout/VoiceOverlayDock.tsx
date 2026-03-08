@@ -23,7 +23,7 @@ export default function VoiceOverlayDock({ roomId }: VoiceOverlayDockProps) {
         <button
           type="button"
           onClick={() => setOpen((prev) => !prev)}
-          className="h-11 w-11 rounded-full border border-[#1e1f22] bg-[#2b2d31] text-[#dbdee1] shadow-[0_10px_24px_rgba(0,0,0,0.4)] hover:bg-[#313338] transition-colors flex items-center justify-center"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-neutral-300 bg-neutral-100 text-neutral-700 shadow-[0_10px_24px_rgba(0,0,0,0.25)] transition-colors hover:bg-neutral-200 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
           title={open ? "Close Voice Panel" : "Open Voice Panel"}
           aria-label={open ? "Close Voice Panel" : "Open Voice Panel"}
         >
