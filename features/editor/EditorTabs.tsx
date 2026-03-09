@@ -25,7 +25,7 @@ export default function EditorTabs() {
   };
 
   return (
-    <div className="h-8 flex border-b border-neutral-300 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 overflow-x-auto">
+    <div className="h-9 flex items-end gap-1 overflow-x-auto border-b border-neutral-300 bg-neutral-100 px-3 dark:border-neutral-800 dark:bg-neutral-900">
       {files.map((file) => {
         const isActive = file.fileId === activeFileId;
         
@@ -33,22 +33,25 @@ export default function EditorTabs() {
           <div
             key={file.fileId}
             className={cn(
-              "flex items-center gap-2 px-3 py-2 text-sm cursor-pointer border-r border-neutral-300 dark:border-neutral-800 min-w-fit transition-colors",
-              "hover:bg-neutral-200 dark:hover:bg-neutral-800",
-              isActive  
-                ? "bg-white text-neutral-900 dark:bg-neutral-800 dark:text-white"
-                : "text-neutral-600 dark:text-neutral-400"
+              "group flex h-8 min-w-0 max-w-[220px] cursor-pointer items-center gap-2 rounded border px-2 text-sm transition-all",
+              isActive
+                ? "border-neutral-300 border-b-transparent bg-white text-neutral-900 dark:border-neutral-700 dark:border-b-transparent dark:bg-neutral-800 dark:text-white"
+                : "border-transparent bg-neutral-200/50 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800"
             )}
             onClick={() => setActiveFile(file.fileId)}
+            title={file.name}
           >
-            <span className="truncate max-w-[140px]">
+            <span className="truncate text-[13px] leading-none">
               {file.name}
             </span>
 
             <button
               className={cn(
-                "flex items-center justify-center w-4 h-4 rounded hover:bg-neutral-300 dark:hover:bg-neutral-700",
-                "text-neutral-500 dark:text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors"
+                "flex h-3 w-3 items-center justify-center rounded transition-colors",
+                "hover:bg-neutral-200 hover:text-neutral-800 dark:hover:bg-neutral-700 dark:hover:text-neutral-100",
+                isActive
+                  ? "text-neutral-500 dark:text-neutral-400"
+                  : "text-neutral-400 opacity-0 group-hover:opacity-100 dark:text-neutral-500"
               )}
               onClick={(e) => handleCloseFile(e, file.fileId)}
               aria-label="Close file"
