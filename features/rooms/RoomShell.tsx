@@ -130,26 +130,24 @@ export default function RoomShell({ roomId }: RoomShellProps) {
 
       <div className="flex flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal" className="flex-1">
-          <ResizablePanel defaultSize={22} minSize={4} maxSize={30}>
-            <div className="h-full flex min-h-0">
-              <ActivityBar
-                active={sidebarView}
-                onSelect={setSidebarView}
-              />
+            <ActivityBar
+            active={sidebarView}
+            onSelect={setSidebarView}
+          />
 
-              {sidebarOpen && (
-                <div className="flex-1 min-w-0">
-                  <Sidebar
-                    view={sidebarView}
-                    roomId={roomId}
-                    projectName={room.name}
-                  />
-                </div>
-              )}
-            </div>
-          </ResizablePanel>
+          {sidebarOpen && (
+            <>
+              <ResizablePanel defaultSize={18} maxSize={25}>
+                <Sidebar
+                  view={sidebarView}
+                  roomId={roomId}
+                  projectName={room.name}
+                />
+              </ResizablePanel>
+              <ResizableHandle />
+            </>
+          )}
 
-          <ResizableHandle />
 
           <ResizablePanel minSize={40}>
             <ResizablePanelGroup direction="vertical" className="h-full">
