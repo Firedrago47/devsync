@@ -301,7 +301,7 @@ export default function DashboardPage() {
                   {rooms.map((room) => (
                     <div
                       key={room.id}
-                      className="flex items-center justify-between rounded-md border border-neutral-200 dark:border-neutral-700 px-3 py-2"
+                      className="flex items-center justify-between rounded-md border-b border-neutral-200 dark:border-neutral-700 px-3 py-2"
                     >
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 truncate">
