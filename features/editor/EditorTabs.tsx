@@ -35,7 +35,7 @@ export default function EditorTabs() {
             className={cn(
               "group flex h-8 min-w-0 max-w-[220px] cursor-pointer items-center gap-2 rounded border px-2 text-sm transition-all",
               isActive
-                ? "border-neutral-300 border-b-transparent bg-white text-neutral-900 dark:border-neutral-700 dark:border-b-transparent dark:bg-neutral-800 dark:text-white"
+                ? " border-t bg-white text-neutral-900 dark:border-t dark:bg-neutral-800 dark:text-white"
                 : "border-transparent bg-neutral-200/50 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800"
             )}
             onClick={() => setActiveFile(file.fileId)}
