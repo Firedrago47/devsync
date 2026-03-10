@@ -49,7 +49,7 @@ export default function CollabPanel({ roomId }: CollabPanelProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-neutral-300 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-950/70">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-neutral-300 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900/70">
       <div className="h-9 border-b border-neutral-300 dark:border-neutral-800 flex items-center px-3 text-xs text-neutral-500">
         Room Chat
       </div>
@@ -69,7 +69,7 @@ export default function CollabPanel({ roomId }: CollabPanelProps) {
                 className={cn(
                   "max-w-[90%] mb-2 rounded border px-2 py-1 text-sm",
                   isMine
-                    ? "bg-neutral-800 text-white border-neutral-800"
+                    ? "bg-neutral-700 text-white border-neutral-800"
                     : "bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-800"
                 )}
               >

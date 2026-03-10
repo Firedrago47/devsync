@@ -272,7 +272,7 @@ export default function DashboardPage() {
                   {Array.from({ length: 3 }).map((_, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between rounded-md border border-neutral-200 dark:border-neutral-700 px-3 py-2"
+                      className="flex items-center justify-between rounded-md border-b border-neutral-200 dark:border-neutral-700 px-3 py-2"
                     >
                       <div className="min-w-0 flex-1 space-y-2">
                         <Skeleton className="h-4 w-40" />

@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import { cn } from "@/lib/utils";
 import {
   MessageSquare,
   Sparkles,
   SendHorizontal,
-  FileCode2,
   Wand2,
   Bug,
   ShieldCheck,
   AlertTriangle,
   Info,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,14 @@ const severityStyle: Record<ReviewItem["severity"], string> = {
   info: "border-l-neutral-500 bg-neutral-100 dark:bg-neutral-900/70",
 };
 
+const REVIEW_STEPS = [
+  "Preparing selected code context",
+  "Running static pattern checks",
+  "Asking AI for issue analysis",
+  "Scoring severity and confidence",
+  "Formatting final suggestions",
+];
+
 /* ================= MAIN ================= */
 
 export default function AIReviewPanel() {
@@ -70,8 +79,18 @@ export default function AIReviewPanel() {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [hasRun, setHasRun] = useState(false);
+  const [reviewStepIndex, setReviewStepIndex] = useState(0);
+  const reviewTimerRef = useRef<number | null>(null);
 
   const { fileName, code, range } = useEditorContext();
+
+  useEffect(() => {
+    return () => {
+      if (reviewTimerRef.current) {
+        window.clearInterval(reviewTimerRef.current);
+      }
+    };
+  }, []);
 
   /* ================= CHAT STREAM ================= */
 
@@ -149,6 +168,13 @@ export default function AIReviewPanel() {
     setResults([]);
     setReviewError(null);
     setHasRun(true);
+    setReviewStepIndex(0);
+
+    reviewTimerRef.current = window.setInterval(() => {
+      setReviewStepIndex((prev) =>
+        prev >= REVIEW_STEPS.length - 1 ? prev : prev + 1
+      );
+    }, 1100);
 
     try {
       const res = await fetch("/api/ai/review", {
@@ -171,6 +197,7 @@ export default function AIReviewPanel() {
       }
 
       if (data.success) {
+        setReviewStepIndex(REVIEW_STEPS.length - 1);
         setResults(
           data.results.map((r: ReviewItem, i: number) => ({
             ...r,
@@ -181,6 +208,10 @@ export default function AIReviewPanel() {
     } catch {
       setReviewError("Network error");
     } finally {
+      if (reviewTimerRef.current) {
+        window.clearInterval(reviewTimerRef.current);
+        reviewTimerRef.current = null;
+      }
       setReviewLoading(false);
     }
   }
@@ -190,7 +221,7 @@ export default function AIReviewPanel() {
   /* ================= UI ================= */
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-neutral-300 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-950/70">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-neutral-300 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900">
 
       {/* TAB HEADER */}
       <div className="border-b border-neutral-300 dark:border-neutral-800 flex">
@@ -243,7 +274,7 @@ export default function AIReviewPanel() {
       {tab === "review" && (
         <>
           <div className="border-b border-neutral-300 dark:border-neutral-800 p-3 flex justify-between">
-            <div className="text-xs text-neutral-500">
+            <div className="text-sm text-neutral-500">
               {fileName && range ? `${fileName} (${range.startLine}-${range.endLine})` : "Select code to review"}
             </div>
             <Button size="sm" onClick={handleRunReview} disabled={!canReview || reviewLoading}>
@@ -254,6 +285,54 @@ export default function AIReviewPanel() {
 
           <ScrollArea className="flex-1 min-h-0 p-3 space-y-2">
             {reviewError && <div className="text-sm text-red-500">{reviewError}</div>}
+
+            {reviewLoading && (
+              <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/70 p-4 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />
+                  <span className="text-sm font-medium">
+                    Reviewing code with AI...
+                  </span>
+                </div>
+
+                <div className="w-full h-2 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+                  <div
+                    className="h-full bg-neutral-500 transition-all duration-500"
+                    style={{
+                      width: `${((reviewStepIndex + 1) / REVIEW_STEPS.length) * 100}%`,
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  {REVIEW_STEPS.map((step, index) => {
+                    const done = index < reviewStepIndex;
+                    const active = index === reviewStepIndex;
+
+                    return (
+                      <div key={step} className="flex items-center gap-2 text-xs">
+                        {done ? (
+                          <CheckCircle2 className="h-4 w-4 text-neutral-500" />
+                        ) : active ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />
+                        ) : (
+                          <div className="h-4 w-4 rounded-full border border-neutral-300 dark:border-neutral-700" />
+                        )}
+                        <span
+                          className={
+                            done || active
+                              ? "text-neutral-700 dark:text-neutral-200"
+                              : "text-neutral-500"
+                          }
+                        >
+                          {step}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {!reviewLoading && filtered.map(item=>(
               <div key={item.id} className={`rounded-lg border border-l-4 p-3 ${severityStyle[item.severity]}`}>
@@ -282,7 +361,17 @@ export default function AIReviewPanel() {
 }
 
 /* TAB BUTTON */
-function TabBtn({icon:Icon,label,active,onClick}:{icon:any,label:string,active:boolean,onClick:()=>void}) {
+function TabBtn({
+  icon: Icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       onClick={onClick}
