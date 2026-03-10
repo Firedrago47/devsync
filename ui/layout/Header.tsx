@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+  Brain,
   ClipboardCopy,
   Moon,
   Play,
@@ -20,12 +21,16 @@ interface HeaderProps {
   title: string;
   roomId: string;
   onRunProject?: () => void;
+  onAnalyzeCodebase?: () => void;
+  isAnalyzingCodebase?: boolean;
 }
 
 export default function Header({
   title,
   roomId,
   onRunProject,
+  onAnalyzeCodebase,
+  isAnalyzingCodebase = false,
 }: HeaderProps) {
   const { resolvedTheme, setTheme } = useTheme();
 
@@ -54,6 +59,25 @@ export default function Header({
       </div>
 
       <div className="flex items-center gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={onAnalyzeCodebase}
+              variant="secondary"
+              size="sm"
+              disabled={isAnalyzingCodebase}
+              className="text-xs bg-neutral dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200"
+            >
+              <Brain size={12} />
+              <span className="hidden sm:inline">
+                {isAnalyzingCodebase ? "Analyzing..." : "Analyze"}
+              </span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            Analyze codebase from file tree
+          </TooltipContent>
+        </Tooltip>
         <Toggle
           pressed={resolvedTheme === "dark"}
           onPressedChange={(pressed) => setTheme(pressed ? "dark" : "light")}
@@ -66,6 +90,7 @@ export default function Header({
             <Moon size={14} />
           )}
         </Toggle>
+
 
         <Tooltip>
           <TooltipTrigger asChild>
