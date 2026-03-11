@@ -12,7 +12,7 @@ export default function VoiceOverlayDock({ roomId }: VoiceOverlayDockProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="pointer-events-none absolute left-2 bottom-2 z-[120] ">
+    <div className="pointer-events-none absolute left-4 bottom-4 z-[120] ">
       {open && (
         <div className="pointer-events-auto mb-2 w-[260px] rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
           <VoiceDock roomId={roomId} />
@@ -23,7 +23,7 @@ export default function VoiceOverlayDock({ roomId }: VoiceOverlayDockProps) {
         <button
           type="button"
           onClick={() => setOpen((prev) => !prev)}
-          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-b border-l border-green-300 bg-neutral-100 text-neutral-700 shadow-[0_10px_24px_rgba(0,0,0,0.25)] transition-colors hover:bg-neutral-200 dark:border-neutral-400 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
+          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-b border-l border-neutral-700 bg-neutral-100 text-neutral-700 shadow-[0_10px_24px_rgba(0,0,0,0.25)] transition-colors hover:bg-neutral-200 dark:border-neutral-400 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
           title={open ? "Close Voice Panel" : "Open Voice Panel"}
           aria-label={open ? "Close Voice Panel" : "Open Voice Panel"}
         >
