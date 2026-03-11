@@ -49,9 +49,9 @@ const iconByCategory = {
 };
 
 const severityStyle: Record<ReviewItem["severity"], string> = {
-  error: "border-l-neutral-500 bg-neutral-100 dark:bg-neutral-900/70",
-  warning: "border-l-neutral-500 bg-neutral-100 dark:bg-neutral-900/70",
-  info: "border-l-neutral-500 bg-neutral-100 dark:bg-neutral-900/70",
+  error: "border-l-red-500 bg-neutral-100 dark:bg-neutral-900/70",
+  warning: "border-l-yellow-500 bg-neutral-100 dark:bg-neutral-900/70",
+  info: "border-l-blue-500 bg-neutral-100 dark:bg-neutral-900/70",
 };
 
 const REVIEW_STEPS = [
