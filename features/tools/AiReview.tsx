@@ -35,6 +35,9 @@ type ReviewItem = {
   category: "bug" | "security" | "performance" | "style";
   message: string;
   confidence: "low" | "medium" | "high";
+  impact?: string | null;
+  fix?: string | null;
+  location?: string | null;
 };
 
 type Filter = "all" | "error" | "warning" | "info";
@@ -62,6 +65,26 @@ const REVIEW_STEPS = [
   "Formatting final suggestions",
 ];
 
+function cleanModelText(value?: string | null): string {
+  if (!value) return "";
+  return value
+    .replace(/\berrorstylehighlocation:\s*n\/a\b/gi, "")
+    .replace(/\bwarningstylemediumlocation:\s*n\/a\b/gi, "")
+    .replace(/\binfostylelowlocation:\s*n\/a\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function toSummaryLines(value?: string | null): string[] {
+  const text = cleanModelText(value);
+  if (!text) return [];
+  return text
+    .split(/\n|\.\s+/)
+    .map((line) => line.replace(/^[-*]\s*/, "").trim())
+    .filter(Boolean)
+    .slice(0, 4);
+}
+
 /* ================= MAIN ================= */
 
 export default function AIReviewPanel() {
@@ -80,6 +103,8 @@ export default function AIReviewPanel() {
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [hasRun, setHasRun] = useState(false);
   const [reviewStepIndex, setReviewStepIndex] = useState(0);
+  const [reviewSummary, setReviewSummary] = useState<string | null>(null);
+  const [reviewExplanation, setReviewExplanation] = useState<string | null>(null);
   const reviewTimerRef = useRef<number | null>(null);
 
   const { fileName, code, range } = useEditorContext();
@@ -167,6 +192,8 @@ export default function AIReviewPanel() {
     setReviewLoading(true);
     setResults([]);
     setReviewError(null);
+    setReviewSummary(null);
+    setReviewExplanation(null);
     setHasRun(true);
     setReviewStepIndex(0);
 
@@ -198,6 +225,10 @@ export default function AIReviewPanel() {
 
       if (data.success) {
         setReviewStepIndex(REVIEW_STEPS.length - 1);
+        setReviewSummary(typeof data.summary === "string" ? data.summary : null);
+        setReviewExplanation(
+          typeof data.explanation === "string" ? data.explanation : null
+        );
         setResults(
           data.results.map((r: ReviewItem, i: number) => ({
             ...r,
@@ -286,6 +317,24 @@ export default function AIReviewPanel() {
           <ScrollArea className="flex-1 min-h-0 p-3 space-y-2">
             {reviewError && <div className="text-sm text-red-500">{reviewError}</div>}
 
+            {/* {!reviewLoading && !reviewError && (reviewSummary || reviewExplanation) && (
+              <div className="rounded-lg border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-3 space-y-2">
+                {reviewSummary && (
+                  <p className="text-sm text-neutral-800 dark:text-neutral-200">
+                    <span className="font-medium">Review Summary:</span>{" "}
+                    {cleanModelText(reviewSummary)}
+                  </p>
+                )}
+                {toSummaryLines(reviewExplanation).length > 0 && (
+                  <ul className="list-disc list-inside space-y-1 text-xs text-neutral-600 dark:text-neutral-400">
+                    {toSummaryLines(reviewExplanation).map((line, index) => (
+                      <li key={`${line}-${index}`}>{line}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )} */}
+
             {reviewLoading && (
               <div className="rounded-xl border border-neutral-300 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/70 p-4 space-y-4">
                 <div className="flex items-center gap-2">
@@ -338,13 +387,27 @@ export default function AIReviewPanel() {
               <div key={item.id} className={`rounded-lg border border-l-4 p-3 ${severityStyle[item.severity]}`}>
                 <div className="flex gap-3">
                   {iconByCategory[item.category]}
-                  <div>
-                    <div className="text-sm">{item.message}</div>
-                    <div className="flex gap-1 mt-2">
-                      <Badge variant="outline">{item.severity}</Badge>
-                      <Badge variant="outline">{item.category}</Badge>
-                      <Badge variant="outline">{item.confidence}</Badge>
+                  <div className="w-full space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="text-sm font-medium leading-5">
+                        {cleanModelText(item.message) || "Issue detected"}
+                      </div>
                     </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge variant="outline">{item.severity.toUpperCase()}</Badge>
+                      <Badge variant="outline">{item.category}</Badge>
+                      <Badge variant="outline">{item.confidence} confidence</Badge>
+                      {/* <Badge variant="outline">{item.location ? `Location: ${item.location}` : "Location: not provided"}</Badge> */}
+                    </div>
+
+                    <p className="rounded-md bg-neutral-200/60 dark:bg-neutral-800/60 px-2 py-1.5 text-xs text-neutral-700 dark:text-neutral-300">
+                      <span className="font-semibold">Issue:</span>{" "}
+                      {cleanModelText(item.impact) || "Issue details not provided."}
+                    </p>
+                    <p className="rounded-md bg-neutral-200/60 dark:bg-neutral-800/60 px-2 py-1.5 text-xs text-neutral-700 dark:text-neutral-300">
+                      <span className="font-semibold">Fix:</span>{" "}
+                      {cleanModelText(item.fix) || "Fix guidance not provided."}
+                    </p>
                   </div>
                 </div>
               </div>

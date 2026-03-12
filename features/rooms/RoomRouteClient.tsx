@@ -31,8 +31,8 @@ export default function RoomRouteClient({ roomId }: RoomRouteClientProps) {
 
   if (status === "loading") {
     return (
-      <div className="h-full flex items-center justify-center text-neutral-400">
-        <Loader2 className="mr-2 animate-spin text-neutral-500 dark:text-neutral-400" />
+      <div className="h-full flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-400">
+        <Loader2 className="mr-2 animate-spin text-neutral-700 dark:text-neutral-400" />
         Loading room
       </div>
     );

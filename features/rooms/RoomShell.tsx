@@ -363,7 +363,7 @@ export default function RoomShell({ roomId }: RoomShellProps) {
               )}
 
               {analysisResult && !analysisError && (
-                <div className="rounded-md border border-green-400/30 bg-green-400/10 p-3 space-y-2">
+                <div className="rounded-md border border-green-400/30 bg-green-400/10 p-3 space-y-3">
                   <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
                     <Sparkles className="h-4 w-4" />
                     <span className="text-sm font-medium">Summary</span>
@@ -375,6 +375,38 @@ export default function RoomShell({ roomId }: RoomShellProps) {
                     Files: {analysisResult.totalFiles} | Folders:{" "}
                     {analysisResult.totalFolders}
                   </p>
+
+                  {analysisResult.techStack.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Stack: {analysisResult.techStack.join(", ")}
+                    </p>
+                  )}
+
+                  {analysisResult.insights.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-foreground">
+                        Insights
+                      </p>
+                      <ul className="list-disc list-inside space-y-1 text-xs text-foreground/90">
+                        {analysisResult.insights.map((insight, index) => (
+                          <li key={`${insight}-${index}`}>{insight}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {analysisResult.warnings.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                        Warnings
+                      </p>
+                      <ul className="list-disc list-inside space-y-1 text-xs text-amber-700 dark:text-amber-200">
+                        {analysisResult.warnings.map((warning, index) => (
+                          <li key={`${warning}-${index}`}>{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
