@@ -15,6 +15,97 @@ async function wakeWisdom() {
   }
 }
 
+function normalizeSeverity(value: unknown): "error" | "warning" | "info" {
+  const raw = typeof value === "string" ? value.toLowerCase() : "";
+  if (raw === "error" || raw === "critical" || raw === "high") return "error";
+  if (raw === "warning" || raw === "medium") return "warning";
+  return "info";
+}
+
+function normalizeCategory(
+  value: unknown
+): "bug" | "security" | "performance" | "style" {
+  const raw = typeof value === "string" ? value.toLowerCase() : "";
+  if (raw === "security") return "security";
+  if (raw === "performance") return "performance";
+  if (raw === "bug" || raw === "logic") return "bug";
+  return "style";
+}
+
+function normalizeConfidence(value: unknown): "low" | "medium" | "high" {
+  const raw = typeof value === "string" ? value.toLowerCase() : "";
+  if (raw === "high") return "high";
+  if (raw === "low") return "low";
+  return "medium";
+}
+
+function normalizeLocation(issue: any): string | null {
+  const startLine =
+    typeof issue?.start_line === "number"
+      ? issue.start_line
+      : typeof issue?.line === "number"
+        ? issue.line
+        : typeof issue?.lineNumber === "number"
+          ? issue.lineNumber
+          : null;
+  const endLine =
+    typeof issue?.end_line === "number"
+      ? issue.end_line
+      : typeof issue?.lineEnd === "number"
+        ? issue.lineEnd
+        : null;
+
+  if (startLine && endLine && endLine !== startLine) {
+    return `L${startLine}-L${endLine}`;
+  }
+  if (startLine) {
+    return `L${startLine}`;
+  }
+  return null;
+}
+
+function firstString(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return null;
+}
+
+function buildSimpleReviewText(input: {
+  message: string;
+  fix: string | null;
+  location: string | null;
+  code: string;
+  language: string;
+}) {
+  const message = input.message.trim();
+  const lower = message.toLowerCase();
+  const language = (input.language || "").toLowerCase();
+
+  let fix = input.fix;
+
+  // Practical heuristic for common demo case:
+  // Python syntax error caused by JS-style comment and bad quoting.
+  if (
+    /syntax/.test(lower) &&
+    (language === "python" || language === "auto") &&
+    input.code.includes("//")
+  ) {
+    fix =
+      "In Python use `#` for comments (not `//`). Also fix mismatched quotes, e.g. `print(\"hello\")`.";
+  }
+
+  const locationText = input.location ? ` at ${input.location}` : "";
+  const explanation = `Issue${locationText}: ${message}`;
+  const resolution = fix
+    ? `Fix: ${fix}`
+    : "Fix: Review the indicated line and correct the syntax/logic in that statement.";
+
+  return { explanation, resolution };
+}
+
 export async function POST(req: Request) {
   try {
     const { scope, file, language, code } = await req.json();
@@ -41,7 +132,13 @@ export async function POST(req: Request) {
         language: language || "python",
         code,
         scope: scope || "file",
-        policy: { org: "devsync" },
+        policy: {
+          org: "devsync",
+          mode: "actionable_review",
+          include_location: true,
+          include_fix: true,
+          include_impact: true,
+        },
       }),
     });
 
@@ -55,20 +152,35 @@ export async function POST(req: Request) {
     }
 
     /* Convert Wisdom → DevSync UI format */
-    const results = (data.issues || []).map((i: any, index: number) => ({
-      id: String(index),
-      severity: i.severity || "info",
-      category:
-        i.category === "security"
-          ? "security"
-          : i.category === "performance"
-          ? "performance"
-          : i.category === "bug"
-          ? "bug"
-          : "style",
-      message: i.message || "Issue detected",
-      confidence: i.confidence || "medium",
-    }));
+    const results = (data.issues || []).map((i: any, index: number) => {
+      const message =
+        firstString(i?.title, i?.message, i?.description) || "Issue detected";
+      const fix = firstString(
+        i?.fix,
+        i?.suggestion,
+        i?.recommendation,
+        i?.remediation
+      );
+      const location = firstString(i?.location, normalizeLocation(i));
+      const simple = buildSimpleReviewText({
+        message,
+        fix,
+        location,
+        code: typeof code === "string" ? code : "",
+        language: typeof language === "string" ? language : "auto",
+      });
+
+      return {
+        id: String(index),
+        severity: normalizeSeverity(i?.severity),
+        category: normalizeCategory(i?.category),
+        message,
+        confidence: normalizeConfidence(i?.confidence),
+        impact: simple.explanation,
+        fix: simple.resolution,
+        location,
+      };
+    });
 
     return NextResponse.json({
       success: true,
