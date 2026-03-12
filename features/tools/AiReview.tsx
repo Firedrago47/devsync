@@ -384,7 +384,7 @@ export default function AIReviewPanel() {
             )}
 
             {!reviewLoading && filtered.map(item=>(
-              <div key={item.id} className={`rounded-lg border border-l-4 p-3 ${severityStyle[item.severity]}`}>
+              <div key={item.id} className={`rounded-lg border border-l-4 p-3 mb-2 ${severityStyle[item.severity]}`}>
                 <div className="flex gap-3">
                   {iconByCategory[item.category]}
                   <div className="w-full space-y-2">
