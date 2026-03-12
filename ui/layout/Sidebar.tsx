@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import FileTree from "@/features/filesystem/FileTree";
 import { usePresenceStore } from "@/features/collaboration/presence/presence.store";
 import { createNode } from "@/features/collaboration/filesystem/fs.action";
+import { getSocket } from "@/features/collaboration/client/socket";
 import { assignRoomMemberRole } from "@/features/rooms/room.actions";
 import { useRoomStore } from "@/features/rooms/room.store";
 import { resolveMyRole } from "@/features/rooms/identity";
@@ -114,6 +115,25 @@ export default function Sidebar({ roomId, view, projectName = "Project" }: Sideb
 
   const getMemberRole = (userId: string) =>
     members.find((m) => m.userId === userId)?.role;
+
+  const handleCloneRepository = () => {
+    if (!canEdit) return;
+    const repoUrl = prompt("Git repository URL:", "https://github.com/user/repo.git");
+    if (!repoUrl?.trim()) return;
+
+    const socket = getSocket();
+    socket.emit(
+      "repo:clone",
+      { roomId, repoUrl: repoUrl.trim() },
+      (response?: { ok?: boolean; error?: string; importedFiles?: number }) => {
+        if (!response?.ok) {
+          toast.error(response?.error || "Failed to import repository");
+          return;
+        }
+        toast.success(`Repository imported (${response.importedFiles ?? 0} files)`);
+      }
+    );
+  };
 
   return (
     <div className="h-full flex flex-col bg-neutral-100 dark:bg-neutral-900 border-r border-neutral-300 dark:border-neutral-800">
@@ -239,12 +259,18 @@ export default function Sidebar({ roomId, view, projectName = "Project" }: Sideb
               <p className="text-xs text-neutral-600 dark:text-neutral-500 mb-4 max-w-[200px]">
                 Initialize a git repository or clone an existing one to get started
               </p>
-              <Button variant="outline" size="sm" className="h-8 text-xs" disabled>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                disabled={!canEdit}
+                onClick={handleCloneRepository}
+              >
                 <GitBranch size={12} className="mr-2" />
-                Initialize Repository
+                Clone Repository
               </Button>
               <p className="text-[10px] text-neutral-500 dark:text-neutral-600 mt-6">
-                Coming soon...
+                Paste a public Git URL to import files into this room
               </p>
             </div>
           )}

@@ -11,9 +11,9 @@ interface ActivityBarProps {
 
 const items: { id: SidebarView; icon: React.ElementType }[] = [
   { id: "explorer", icon: Folder },
+  { id: "collab", icon: Users },
   { id: "git", icon: GitBranch },
   { id: "run", icon: Play },
-  { id: "collab", icon: Users },
   { id: "settings", icon: Settings },
 ];
 
