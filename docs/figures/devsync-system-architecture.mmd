@@ -1,0 +1,36 @@
+flowchart LR
+    U[User Browser] --> A[Next.js Frontend]
+
+    subgraph FE[Frontend Layer]
+        A --> RP[RoomRouteClient]
+        A --> CP[CollaborationProvider]
+        CP --> EB[Typed Event Bus]
+        EB --> ST[Zustand Stores]
+        ST --> UI[RoomShell / Sidebar / Editor / Terminal / Chat]
+        UI --> M[Monaco Editor]
+        M --> Y[Yjs CRDT]
+    end
+
+    A <--> S[Socket.IO Client]
+    S <--> G[Realtime Gateway (Socket.IO Server)]
+
+    subgraph BE[Backend Collaboration Services]
+        G --> RH[room.handlers]
+        G --> FH[fs.handlers]
+        G --> YH[yjs.handlers]
+        G --> TH[terminal.handlers]
+        G --> CH[chat / presence handlers]
+    end
+
+    RH <--> RS[room.service]
+    RS <--> DB[(Supabase DB)]
+
+    FH <--> SS[(Object Storage + Room Tree State)]
+    YH <--> YD[(Per-file Y Docs)]
+
+    TH <--> J[Judge0 Execution]
+    TH --> L[terminal:session + terminal:log events]
+    L --> UI
+
+    CH --> P[presence:update / collab:history]
+    P --> ST

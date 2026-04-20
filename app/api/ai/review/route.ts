@@ -1,17 +1,16 @@
 import { NextResponse } from "next/server";
+import { requireApiSession } from "@/lib/security/auth";
+import { logSecurity } from "@/lib/security/logger";
+import { getClientIp, isTrustedOrigin } from "@/lib/security/request";
+import { checkRateLimit } from "@/lib/security/rate-limit";
+import { getWisdomConfig } from "@/lib/security/wisdom";
 
-const WISDOM_BASE = "https://wisdom-ai-fn24.onrender.com";
-const WISDOM_REVIEW = `${WISDOM_BASE}/review`;
-const WISDOM_HEALTH = `${WISDOM_BASE}/health`;
-const WISDOM_KEY = "devsync_live_abc123";
-
-/* Wake Render server (prevents cold start fail) */
-async function wakeWisdom() {
+async function wakeWisdom(healthUrl: string) {
   try {
-    await fetch(WISDOM_HEALTH, { method: "GET" });
+    await fetch(healthUrl, { method: "GET" });
     await new Promise((r) => setTimeout(r, 4000));
   } catch {
-    console.log("Wake attempt done");
+    logSecurity("info", { event: "wisdom_wake_attempt_done" });
   }
 }
 
@@ -39,20 +38,25 @@ function normalizeConfidence(value: unknown): "low" | "medium" | "high" {
   return "medium";
 }
 
-function normalizeLocation(issue: any): string | null {
+function toRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+function normalizeLocation(issue: unknown): string | null {
+  const record = toRecord(issue);
   const startLine =
-    typeof issue?.start_line === "number"
-      ? issue.start_line
-      : typeof issue?.line === "number"
-        ? issue.line
-        : typeof issue?.lineNumber === "number"
-          ? issue.lineNumber
+    typeof record.start_line === "number"
+      ? record.start_line
+      : typeof record.line === "number"
+        ? record.line
+        : typeof record.lineNumber === "number"
+          ? record.lineNumber
           : null;
   const endLine =
-    typeof issue?.end_line === "number"
-      ? issue.end_line
-      : typeof issue?.lineEnd === "number"
-        ? issue.lineEnd
+    typeof record.end_line === "number"
+      ? record.end_line
+      : typeof record.lineEnd === "number"
+        ? record.lineEnd
         : null;
 
   if (startLine && endLine && endLine !== startLine) {
@@ -107,25 +111,63 @@ function buildSimpleReviewText(input: {
 }
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
   try {
+    const session = await requireApiSession();
+    if (!session?.user?.id) {
+      logSecurity("warn", {
+        event: "unauthorized_api_access",
+        ip,
+        path: "/api/ai/review",
+      });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!isTrustedOrigin(req)) {
+      logSecurity("warn", {
+        event: "untrusted_origin_blocked",
+        userId: session.user.id,
+        ip,
+        path: "/api/ai/review",
+      });
+      return NextResponse.json({ error: "Forbidden origin" }, { status: 403 });
+    }
+
+    const limit = checkRateLimit({
+      key: `ai-review:${session.user.id}:${ip}`,
+      max: 20,
+      windowMs: 60_000,
+    });
+    if (!limit.ok) {
+      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    }
+
     const { scope, file, language, code } = await req.json();
 
-    if (!file || !code) {
+    if (
+      typeof file !== "string" ||
+      typeof code !== "string" ||
+      !file.trim() ||
+      !code.trim()
+    ) {
       return NextResponse.json(
         { error: "Missing file or code" },
         { status: 400 }
       );
     }
 
-    /* wake render */
-    await wakeWisdom();
+    if (code.length > 200_000) {
+      return NextResponse.json({ error: "Code payload too large" }, { status: 413 });
+    }
 
-    /* call wisdom engine */
-    const wisdomRes = await fetch(WISDOM_REVIEW, {
+    const wisdom = getWisdomConfig();
+    await wakeWisdom(wisdom.healthUrl);
+
+    const wisdomRes = await fetch(wisdom.reviewUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": WISDOM_KEY,
+        "x-api-key": wisdom.key,
       },
       body: JSON.stringify({
         file,
@@ -144,24 +186,35 @@ export async function POST(req: Request) {
 
     const data = await wisdomRes.json();
 
-    if (!data.success) {
+    if (!wisdomRes.ok || !data.success) {
+      logSecurity("warn", {
+        event: "wisdom_review_error",
+        userId: session.user.id,
+        ip,
+        path: "/api/ai/review",
+        details: {
+          status: wisdomRes.status,
+        },
+      });
       return NextResponse.json(
-        { error: "Wisdom analysis failed", details: data },
+        { error: "Wisdom analysis failed" },
         { status: 500 }
       );
     }
 
     /* Convert Wisdom → DevSync UI format */
-    const results = (data.issues || []).map((i: any, index: number) => {
+    const issues: unknown[] = Array.isArray(data.issues) ? data.issues : [];
+    const results = issues.map((issue, index: number) => {
+      const record = toRecord(issue);
       const message =
-        firstString(i?.title, i?.message, i?.description) || "Issue detected";
+        firstString(record.title, record.message, record.description) || "Issue detected";
       const fix = firstString(
-        i?.fix,
-        i?.suggestion,
-        i?.recommendation,
-        i?.remediation
+        record.fix,
+        record.suggestion,
+        record.recommendation,
+        record.remediation
       );
-      const location = firstString(i?.location, normalizeLocation(i));
+      const location = firstString(record.location, normalizeLocation(issue));
       const simple = buildSimpleReviewText({
         message,
         fix,
@@ -172,10 +225,10 @@ export async function POST(req: Request) {
 
       return {
         id: String(index),
-        severity: normalizeSeverity(i?.severity),
-        category: normalizeCategory(i?.category),
+        severity: normalizeSeverity(record.severity),
+        category: normalizeCategory(record.category),
         message,
-        confidence: normalizeConfidence(i?.confidence),
+        confidence: normalizeConfidence(record.confidence),
         impact: simple.explanation,
         fix: simple.resolution,
         location,
@@ -191,7 +244,12 @@ export async function POST(req: Request) {
       explanation: data.llm_explanation?.content || null,
     });
   } catch (err) {
-    console.error("WISDOM ERROR:", err);
+    logSecurity("error", {
+      event: "review_route_exception",
+      ip,
+      path: "/api/ai/review",
+      details: { message: err instanceof Error ? err.message : String(err) },
+    });
     return NextResponse.json(
       { error: "Wisdom connection failed" },
       { status: 500 }

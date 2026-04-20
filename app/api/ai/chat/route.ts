@@ -1,65 +1,110 @@
 import { NextResponse } from "next/server";
+import { requireApiSession } from "@/lib/security/auth";
+import { logSecurity } from "@/lib/security/logger";
+import { getClientIp, isTrustedOrigin } from "@/lib/security/request";
+import { checkRateLimit } from "@/lib/security/rate-limit";
+import { getWisdomConfig } from "@/lib/security/wisdom";
 
-const WISDOM_BASE = "https://wisdom-ai-fn24.onrender.com";
-const WISDOM_CHAT = `${WISDOM_BASE}/api/wisdom/chat`;
-const WISDOM_HEALTH = `${WISDOM_BASE}/health`;
-const WISDOM_KEY = "devsync_live_abc123";
-
-/* wake wisdom render server */
-async function wakeWisdom() {
+async function wakeWisdom(healthUrl: string) {
   try {
-    await fetch(WISDOM_HEALTH);
+    await fetch(healthUrl);
     await new Promise((r) => setTimeout(r, 4000));
   } catch {
-    console.log("wake done");
+    logSecurity("info", { event: "wisdom_wake_attempt_done" });
   }
 }
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
   try {
+    const session = await requireApiSession();
+    if (!session?.user?.id) {
+      logSecurity("warn", {
+        event: "unauthorized_api_access",
+        ip,
+        path: "/api/ai/chat",
+      });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!isTrustedOrigin(req)) {
+      logSecurity("warn", {
+        event: "untrusted_origin_blocked",
+        userId: session.user.id,
+        ip,
+        path: "/api/ai/chat",
+      });
+      return NextResponse.json({ error: "Forbidden origin" }, { status: 403 });
+    }
+
+    const limit = checkRateLimit({
+      key: `ai-chat:${session.user.id}:${ip}`,
+      max: 30,
+      windowMs: 60_000,
+    });
+    if (!limit.ok) {
+      logSecurity("warn", {
+        event: "rate_limit_exceeded",
+        userId: session.user.id,
+        ip,
+        path: "/api/ai/chat",
+      });
+      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    }
+
     const body = await req.json();
 
-    const message = body.message || "";
-    const file = body.file || "editor.py";
-    const code = body.code || "";
-    const language = body.language || "python";
+    const message =
+      typeof body?.message === "string" ? body.message.trim() : "";
+    const file = typeof body?.file === "string" ? body.file : "editor.py";
+    const code = typeof body?.code === "string" ? body.code : "";
+    const language =
+      typeof body?.language === "string" ? body.language : "python";
 
-    if (!message) {
+    if (!message || message.length > 5000) {
       return NextResponse.json(
-        { error: "Message required" },
+        { error: "Message is required and must be <= 5000 chars" },
         { status: 400 }
       );
     }
 
-    // wake render backend
-    await wakeWisdom();
+    if (code.length > 200_000) {
+      return NextResponse.json({ error: "Code payload too large" }, { status: 413 });
+    }
 
-    // CALL WISDOM STREAM BACKEND
-    const wisdomRes = await fetch(WISDOM_CHAT, {
+    const wisdom = getWisdomConfig();
+    await wakeWisdom(wisdom.healthUrl);
+
+    const wisdomRes = await fetch(wisdom.chatUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": WISDOM_KEY,
+        "x-api-key": wisdom.key,
       },
       body: JSON.stringify({
-        message: message,
-        session_id: "devsync-user-1",
-        file: file,
-        code: code,
-        language: language
+        message,
+        session_id: session.user.id,
+        file,
+        code,
+        language,
       }),
     });
 
     if (!wisdomRes.ok) {
       const errText = await wisdomRes.text();
-      console.log("WISDOM ERROR:", errText);
+      logSecurity("error", {
+        event: "wisdom_chat_error",
+        userId: session.user.id,
+        ip,
+        path: "/api/ai/chat",
+        details: { status: wisdomRes.status, errText },
+      });
       return NextResponse.json(
-        { error: "Wisdom backend error", details: errText },
+        { error: "Wisdom backend error" },
         { status: 500 }
       );
     }
 
-    //  IMPORTANT: STREAM RESPONSE BACK TO FRONTEND
     if (!wisdomRes.body) {
       return NextResponse.json(
         { error: "No response body from wisdom" },
@@ -73,9 +118,13 @@ export async function POST(req: Request) {
         "Transfer-Encoding": "chunked",
       },
     });
-
   } catch (err) {
-    console.error("CHAT ROUTE ERROR:", err);
+    logSecurity("error", {
+      event: "chat_route_exception",
+      ip,
+      path: "/api/ai/chat",
+      details: { message: err instanceof Error ? err.message : String(err) },
+    });
     return NextResponse.json(
       { error: "Server crash" },
       { status: 500 }

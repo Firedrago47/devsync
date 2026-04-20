@@ -5,6 +5,7 @@ import type { JWT } from "next-auth/jwt";
 import type { Session, User } from "next-auth";
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,
@@ -18,6 +19,11 @@ export const authOptions: NextAuthOptions = {
 
   session: {
     strategy: "jwt",
+    maxAge: 60 * 60 * 12,
+    updateAge: 60 * 60,
+  },
+  jwt: {
+    maxAge: 60 * 60 * 12,
   },
 
   callbacks: {
@@ -40,6 +46,9 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+  },
+  pages: {
+    signIn: "/auth",
   },
 };
 

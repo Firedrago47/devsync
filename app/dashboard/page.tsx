@@ -63,13 +63,10 @@ export default function DashboardPage() {
       try {
         const backendUrl =
           process.env.NEXT_PUBLIC_BACKEND_URL ?? window.location.origin;
-        const userId = session?.user?.id;
-        if (!userId) return;
-
         const url = new URL("/api/rooms", backendUrl);
-        url.searchParams.set("userId", userId);
 
         const res = await fetch(url.toString(), {
+          credentials: "include",
           signal: controller.signal,
         });
 

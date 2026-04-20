@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-
-const WISDOM_BASE = "https://wisdom-ai-fn24.onrender.com";
-const WISDOM_REVIEW = `${WISDOM_BASE}/review`;
-const WISDOM_HEALTH = `${WISDOM_BASE}/health`;
-const WISDOM_KEY = "devsync_live_abc123";
+import { requireApiSession } from "@/lib/security/auth";
+import { logSecurity } from "@/lib/security/logger";
+import { getClientIp, isTrustedOrigin } from "@/lib/security/request";
+import { checkRateLimit } from "@/lib/security/rate-limit";
+import { getWisdomConfig } from "@/lib/security/wisdom";
 
 interface AnalyzeRequestBody {
   roomId?: string;
@@ -73,10 +73,20 @@ function buildManifest(projectName: string, files: string[]): string {
   ].join("\n");
 }
 
-function extractFlowInsights(data: any): string[] {
+function extractFlowInsights(data: unknown): string[] {
+  const record =
+    data && typeof data === "object"
+      ? (data as Record<string, unknown>)
+      : {};
   const insights: string[] = [];
 
-  const explanation = data?.llm_explanation?.content;
+  const llmExplanation =
+    record.llm_explanation &&
+    typeof record.llm_explanation === "object"
+      ? (record.llm_explanation as Record<string, unknown>)
+      : {};
+
+  const explanation = llmExplanation.content;
   if (typeof explanation === "string" && explanation.trim()) {
     const lines = explanation
       .split("\n")
@@ -90,8 +100,8 @@ function extractFlowInsights(data: any): string[] {
     insights.push(...lines);
   }
 
-  if (typeof data?.summary === "string" && data.summary.trim()) {
-    const summaryLine = data.summary.trim();
+  if (typeof record.summary === "string" && record.summary.trim()) {
+    const summaryLine = record.summary.trim();
     if (!/no\s+issues?|issues?\s+found/i.test(summaryLine)) {
       insights.unshift(summaryLine);
     }
@@ -100,17 +110,47 @@ function extractFlowInsights(data: any): string[] {
   return [...new Set(insights)].slice(0, 8);
 }
 
-async function wakeWisdom() {
+async function wakeWisdom(healthUrl: string) {
   try {
-    await fetch(WISDOM_HEALTH, { method: "GET" });
+    await fetch(healthUrl, { method: "GET" });
     await new Promise((resolve) => setTimeout(resolve, 4000));
   } catch {
-    console.log("Wisdom wake attempt completed");
+    logSecurity("info", { event: "wisdom_wake_attempt_done" });
   }
 }
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
   try {
+    const session = await requireApiSession();
+    if (!session?.user?.id) {
+      logSecurity("warn", {
+        event: "unauthorized_api_access",
+        ip,
+        path: "/api/ai/codebase",
+      });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!isTrustedOrigin(req)) {
+      logSecurity("warn", {
+        event: "untrusted_origin_blocked",
+        userId: session.user.id,
+        ip,
+        path: "/api/ai/codebase",
+      });
+      return NextResponse.json({ error: "Forbidden origin" }, { status: 403 });
+    }
+
+    const limit = checkRateLimit({
+      key: `ai-codebase:${session.user.id}:${ip}`,
+      max: 10,
+      windowMs: 60_000,
+    });
+    if (!limit.ok) {
+      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    }
+
     const body = (await req.json()) as AnalyzeRequestBody;
     const files = Array.isArray(body.files)
       ? body.files.filter((item): item is string => typeof item === "string")
@@ -120,6 +160,12 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { success: false, error: "No files provided for analysis" },
         { status: 400 }
+      );
+    }
+    if (files.length > 5000) {
+      return NextResponse.json(
+        { success: false, error: "Too many files in analysis request" },
+        { status: 413 }
       );
     }
 
@@ -149,13 +195,14 @@ export async function POST(req: Request) {
     let aiSummary = `${projectName} includes ${files.length} files across ${folderSet.size} folders.`;
     let aiInsights: string[] = [];
 
-    await wakeWisdom();
+    const wisdom = getWisdomConfig();
+    await wakeWisdom(wisdom.healthUrl);
 
-    const wisdomRes = await fetch(WISDOM_REVIEW, {
+    const wisdomRes = await fetch(wisdom.reviewUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": WISDOM_KEY,
+        "x-api-key": wisdom.key,
       },
       body: JSON.stringify({
         file: "CODEBASE_MANIFEST.md",
@@ -171,6 +218,13 @@ export async function POST(req: Request) {
 
     if (!wisdomRes.ok) {
       const details = await wisdomRes.text().catch(() => "");
+      logSecurity("warn", {
+        event: "wisdom_codebase_error",
+        userId: session.user.id,
+        ip,
+        path: "/api/ai/codebase",
+        details: { status: wisdomRes.status },
+      });
       throw new Error(details || `Wisdom HTTP ${wisdomRes.status}`);
     }
 
@@ -214,7 +268,12 @@ export async function POST(req: Request) {
       generatedAt: new Date().toISOString(),
     });
   } catch (err) {
-    console.error("CODEBASE ANALYSIS ERROR:", err);
+    logSecurity("error", {
+      event: "codebase_route_exception",
+      ip,
+      path: "/api/ai/codebase",
+      details: { message: err instanceof Error ? err.message : String(err) },
+    });
     return NextResponse.json(
       {
         success: false,

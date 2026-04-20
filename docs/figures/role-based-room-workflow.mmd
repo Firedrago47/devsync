@@ -1,0 +1,30 @@
+sequenceDiagram
+    autonumber
+    participant U as Joining User
+    participant F as Frontend (RoomRouteClient + Provider)
+    participant S as Socket Server
+    participant R as room.service
+    participant O as Room Owner
+
+    U->>F: Open /room/{roomId}
+    F->>S: room:join(roomId, userId, name, email)
+    S->>R: isMember(roomId, userId)?
+
+    alt Existing member
+        R-->>S: role = owner/editor/viewer
+        S-->>F: room:snapshot + fs:snapshot + presence:update + collab:history
+        F-->>U: Enter room
+    else Not a member
+        S->>R: upsertPendingJoinRequest(...)
+        S-->>O: room:join-request
+        S-->>F: room:error(code=pending_role_assignment)
+        F-->>U: Waiting for owner approval
+
+        O->>S: room:assign-role(roomId, userId, editor|viewer)
+        S->>R: verify owner + assignRole + clearPending
+        S-->>O: updated room:snapshot
+        S-->>F: room:snapshot + fs/presence/chat bootstrap
+        F-->>U: Enter room with assigned permissions
+    end
+
+    Note over F,S: Viewer: read-only\nEditor: file + code edits\nOwner: editor rights + role assignment

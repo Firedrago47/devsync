@@ -1,76 +1,107 @@
-# DevSync Frontend
+# DevSync
 
-DevSync is a realtime collaborative coding workspace designed for learning-focused open-source contribution.
-This frontend is where contributors and mentors interact: rooms, editor, collaboration tools, analysis, and guided review UX.
+DevSync is a collaborative coding workspace built to make open-source onboarding less overwhelming and more human.
+It gives contributors and mentors one shared place to read code, discuss ideas, review changes, and learn by doing.
 
-## Why this project exists
+## Why this project matters
 
-Open-source onboarding is hard for beginners because context is scattered across too many tools.
-DevSync reduces that friction by combining:
-- shared editing,
-- communication,
-- code understanding,
-- and runnable feedback
-into one place.
+Getting started in open source can feel like solving a puzzle with missing pieces.
+DevSync helps by bringing the important pieces together:
 
-## Purpose
+- shared code editing
+- real-time collaboration
+- guided AI assistance
+- structured mentoring workflows
 
-This project is built for **educational mentoring** and contributor enablement.
-It is not positioned as a full build/deploy platform.
+The goal is simple: help people contribute with more confidence, less friction, and better context.
 
-## Key user outcomes
+## What you can do with DevSync
 
-- understand what each file/module does
-- collaborate with mentors in real time
-- practice contribution patterns safely
-- iterate quickly without complex local setup
+- Create and join project rooms
+- Collaborate in real time with shared file trees and editor state
+- Use AI chat and review tools while coding
+- See collaborator presence and in-room activity
+- Run remote code execution flows from the workspace
+- Keep discussions and technical context in the same place
 
-## Main frontend capabilities
+## Screenshots
 
-- Room-based collaboration shell
-- Realtime file tree sync
-- Shared editor tabs and Yjs-powered co-editing
-- Presence and collaborator visibility
-- AI-assisted review and codebase analysis views
-- In-room chat and voice controls
-- Bottom terminal/output panel for remote run logs
+Add your product screenshots here before publishing.
 
-## How we built it (abstract view)
+### 1) Landing / Auth Experience
+![Landing page screenshot placeholder](docs/screenshots/01-landing.png)
 
-Frontend stack:
+### 2) Collaborative Room Workspace
+![Room workspace screenshot placeholder](docs/screenshots/02-room-workspace.png)
+
+### 3) AI Review and Insights Panel
+![AI review screenshot placeholder](docs/screenshots/03-ai-review.png)
+
+### 4) Real-time Collaboration (Presence + Editor)
+![Real-time collaboration screenshot placeholder](docs/screenshots/04-collaboration.png)
+
+## Tech stack
+
 - Next.js (App Router)
 - TypeScript + React
-- Zustand for client state
-- Socket.IO client for realtime transport
-- Monaco editor integration + Yjs synchronization
+- NextAuth (OAuth)
+- Socket.IO client
+- Yjs for collaborative editing
+- Zustand for state management
 
-Design principles:
-- keep socket contracts explicit and stable
-- isolate UI domains into `features/*`
-- keep room shell modular (`ActivityBar`, `Sidebar`, `ToolsPanel`, `BottomPanel`)
-- optimize for clarity and guided collaboration over visual complexity
+## Security highlights
+
+Recent hardening work included:
+
+- server-side protection for private routes and AI API routes
+- auth checks on sensitive API handlers
+- origin checks for state-changing requests
+- rate limiting controls for AI endpoints
+- secure HTTP headers (CSP, HSTS, frame/mime/referrer protections)
+- dependency updates and audit cleanup
 
 ## Local development
 
 ```bash
-cd /home/fire/Documents/Projects/devsync
+cd devsync
 npm install
 npm run dev
 ```
 
-Open:
-- `http://localhost:3000`
+Open `http://localhost:3000`.
 
-## Required environment (frontend)
+## Environment variables
 
-Typical `.env.local` values:
-- `NEXT_PUBLIC_BACKEND_URL` (backend base URL)
-- auth/provider keys (NextAuth / provider-specific)
+Create a `.env.local` with values like:
 
-## Related backend
+- `NEXT_PUBLIC_BACKEND_URL`
+- `NEXT_PUBLIC_APP_URL`
+- `NEXTAUTH_URL`
+- `NEXTAUTH_SECRET`
+- `GITHUB_CLIENT_ID`
+- `GITHUB_CLIENT_SECRET`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `WISDOM_URL`
+- `WISDOM_API_KEY`
 
-Backend repo:
-- `/home/fire/Documents/Projects/DevSync_BackEnd`
+## Project structure
 
-Backend docs:
-- `/home/fire/Documents/Projects/DevSync_BackEnd/PROJECT_DOCUMENTATION.md`
+- `app/` - App Router pages and API routes
+- `features/` - domain-level frontend modules
+- `components/` and `ui/` - reusable interface components
+- `lib/` - shared utilities, including security helpers
+- `docs/` - architecture notes and diagrams
+
+## Contributing
+
+Contributions are welcome.
+
+If you want to help, open an issue first with one of these:
+
+- bug report
+- feature request
+- documentation improvement
+
+Then create a PR with clear scope and screenshots for UI changes.
+
