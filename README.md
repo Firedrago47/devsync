@@ -58,8 +58,6 @@ These are placeholder paths. Replace them with actual screenshots before publish
 ### 2) Collaborative Room Workspace
 ![Room workspace screenshot placeholder](docs/screenshots/room-workspace.png)
 
-
-
 ## Stack
 
 - Next.js (App Router)
@@ -71,14 +69,17 @@ These are placeholder paths. Replace them with actual screenshots before publish
 
 ## Security notes
 
-Recent hardening includes:
+Security improvements in this project were guided by the **OWASP Top 10 (Web Application Security Risks)**.
+
+In simple terms, we focused on:
 
 - Protected private routes and AI APIs on the server side
-- Added auth checks for sensitive handlers
-- Added origin validation for state-changing requests
-- Added rate limits on AI endpoints
-- Added secure headers (CSP, HSTS, frame/mime/referrer protections)
-- Upgraded dependencies and resolved known audit issues
+- Strong authentication and authorization checks
+- Input and request validation on sensitive endpoints
+- CSRF-aware origin checks for state-changing requests
+- Rate limiting to reduce abuse
+- Secure HTTP headers (CSP, HSTS, frame/mime/referrer protections)
+- Dependency updates and vulnerability cleanup
 
 ## Getting started
 
@@ -104,14 +105,6 @@ Create `.env.local` with:
 - `GOOGLE_CLIENT_SECRET`
 - `WISDOM_URL`
 - `WISDOM_API_KEY`
-
-## Project layout
-
-- `app/` - pages, layouts, API routes
-- `features/` - domain modules
-- `components/`, `ui/` - reusable UI building blocks
-- `lib/` - shared utilities and security helpers
-- `docs/` - diagrams and project notes
 
 ## Contributing
 
