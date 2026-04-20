@@ -1,46 +1,66 @@
 # DevSync
 
-DevSync is a collaborative coding workspace built to make open-source onboarding less overwhelming and more human.
-It gives contributors and mentors one shared place to read code, discuss ideas, review changes, and learn by doing.
+DevSync is a real-time collaborative workspace for people learning how to contribute to open source.
 
-## Why this project matters
+**Build Together, Contribute Better.**
 
-Getting started in open source can feel like solving a puzzle with missing pieces.
-DevSync helps by bringing the important pieces together:
+The main purpose of this project is to help developers contribute to FOSS with confidence by learning collaboration workflows in a practical environment.
 
-- shared code editing
-- real-time collaboration
-- guided AI assistance
-- structured mentoring workflows
+Instead of jumping across many tools, DevSync keeps the contribution loop in one place: discuss, edit, review, and iterate together.
 
-The goal is simple: help people contribute with more confidence, less friction, and better context.
+## Who this is for
+
+DevSync is for:
+
+- first-time open-source contributors
+- students and self-learners
+- mentors helping others contribute
+- teams running collaborative coding sessions
+
+If you have ever thought “I want to contribute, but I don’t know where to start,” this project is built for you.
+
+## Why DevSync
+
+Contributing to open source is often hard because the workflow is unclear, not because the code is impossible.
+DevSync helps make that workflow visible and learnable.
+
+- Learn by collaborating in real time
+- Understand contribution flow by doing it
+- Build confidence before opening real project PRs
 
 ## What you can do with DevSync
 
-- Create and join project rooms
-- Collaborate in real time with shared file trees and editor state
-- Use AI chat and review tools while coding
-- See collaborator presence and in-room activity
-- Run remote code execution flows from the workspace
-- Keep discussions and technical context in the same place
+- Room-based collaboration for project teams
+- Shared editor and file tree state (Yjs + Socket.IO)
+- Presence and teammate visibility
+- In-room AI chat, review, and codebase insights
+- Remote run/terminal output panel
+- OAuth-based sign-in flow
+
+## Start here (new contributors)
+
+1. Sign in and join a room
+2. Pick a small task with a mentor or teammate
+3. Discuss the file structure together
+4. Make and review a small change
+5. Repeat until contribution flow feels natural
 
 ## Screenshots
 
-Add your product screenshots here before publishing.
+These are placeholder paths. Replace them with actual screenshots before publishing.
 
 ### 1) Landing / Auth Experience
-![Landing page screenshot placeholder](docs/screenshots/01-landing.png)
+![Landing page screenshot placeholder](docs/screenshots/landing.png)
+
+### 3) DashBoard
+![AI review screenshot placeholder](docs/screenshots/dashboard.png)
 
 ### 2) Collaborative Room Workspace
-![Room workspace screenshot placeholder](docs/screenshots/02-room-workspace.png)
+![Room workspace screenshot placeholder](docs/screenshots/room-workspace.png)
 
-### 3) AI Review and Insights Panel
-![AI review screenshot placeholder](docs/screenshots/03-ai-review.png)
 
-### 4) Real-time Collaboration (Presence + Editor)
-![Real-time collaboration screenshot placeholder](docs/screenshots/04-collaboration.png)
 
-## Tech stack
+## Stack
 
 - Next.js (App Router)
 - TypeScript + React
@@ -49,18 +69,18 @@ Add your product screenshots here before publishing.
 - Yjs for collaborative editing
 - Zustand for state management
 
-## Security highlights
+## Security notes
 
-Recent hardening work included:
+Recent hardening includes:
 
-- server-side protection for private routes and AI API routes
-- auth checks on sensitive API handlers
-- origin checks for state-changing requests
-- rate limiting controls for AI endpoints
-- secure HTTP headers (CSP, HSTS, frame/mime/referrer protections)
-- dependency updates and audit cleanup
+- Protected private routes and AI APIs on the server side
+- Added auth checks for sensitive handlers
+- Added origin validation for state-changing requests
+- Added rate limits on AI endpoints
+- Added secure headers (CSP, HSTS, frame/mime/referrer protections)
+- Upgraded dependencies and resolved known audit issues
 
-## Local development
+## Getting started
 
 ```bash
 cd devsync
@@ -72,7 +92,7 @@ Open `http://localhost:3000`.
 
 ## Environment variables
 
-Create a `.env.local` with values like:
+Create `.env.local` with:
 
 - `NEXT_PUBLIC_BACKEND_URL`
 - `NEXT_PUBLIC_APP_URL`
@@ -85,23 +105,17 @@ Create a `.env.local` with values like:
 - `WISDOM_URL`
 - `WISDOM_API_KEY`
 
-## Project structure
+## Project layout
 
-- `app/` - App Router pages and API routes
-- `features/` - domain-level frontend modules
-- `components/` and `ui/` - reusable interface components
-- `lib/` - shared utilities, including security helpers
-- `docs/` - architecture notes and diagrams
+- `app/` - pages, layouts, API routes
+- `features/` - domain modules
+- `components/`, `ui/` - reusable UI building blocks
+- `lib/` - shared utilities and security helpers
+- `docs/` - diagrams and project notes
 
 ## Contributing
 
-Contributions are welcome.
+Contributions are welcome.  
+Please open an issue first for bug reports, feature requests, or docs improvements, then open a focused PR.
 
-If you want to help, open an issue first with one of these:
-
-- bug report
-- feature request
-- documentation improvement
-
-Then create a PR with clear scope and screenshots for UI changes.
-
+If you are new to open source, documentation and UI polish contributions are great first PRs.
