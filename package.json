@@ -23,7 +23,7 @@
     "amazon-cognito-identity-js": "^6.3.16",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.562.0",
+    "lucide-react": "^1.8.0",
     "next": "^16.2.4",
     "next-auth": "^4.24.13",
     "next-themes": "^0.4.6",
