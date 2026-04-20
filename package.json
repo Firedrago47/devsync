@@ -37,7 +37,7 @@
     "uuid": "^13.0.0",
     "y-protocols": "^1.0.7",
     "y-websocket": "^3.0.0",
-    "yjs": "^13.6.29",
+    "yjs": "^13.6.30",
     "zustand": "^5.0.10"
   },
   "devDependencies": {
