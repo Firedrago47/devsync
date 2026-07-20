@@ -111,10 +111,16 @@ export function getSocket(): Socket {
 
 export function setSocketAuth(auth: Record<string, unknown>) {
   const socket = getSocket();
-  socket.auth = {
+  const nextAuth = {
     ...socket.auth,
     ...auth,
   };
+
+  if (auth.token === undefined) {
+    delete nextAuth.token;
+  }
+
+  socket.auth = nextAuth;
 }
 
 /**
