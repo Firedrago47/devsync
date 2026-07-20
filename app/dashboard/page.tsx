@@ -65,8 +65,14 @@ export default function DashboardPage() {
           process.env.NEXT_PUBLIC_BACKEND_URL ?? window.location.origin;
         const url = new URL("/api/rooms", backendUrl);
 
+        const headers: Record<string, string> = {};
+        if (session?.accessToken) {
+          headers.Authorization = `Bearer ${session.accessToken}`;
+        }
+
         const res = await fetch(url.toString(), {
           credentials: "include",
+          headers,
           signal: controller.signal,
         });
 

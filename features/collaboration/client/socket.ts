@@ -50,6 +50,7 @@ export function getSocket(): Socket {
         reconnectionAttempts: Infinity,
         reconnectionDelay: 500,
         timeout: 20000,
+        withCredentials: true,
 
         /**
          * Auth is transport-level metadata.
@@ -106,6 +107,14 @@ export function getSocket(): Socket {
   }
 
   return socket;
+}
+
+export function setSocketAuth(auth: Record<string, unknown>) {
+  const socket = getSocket();
+  socket.auth = {
+    ...socket.auth,
+    ...auth,
+  };
 }
 
 /**

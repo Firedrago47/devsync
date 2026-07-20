@@ -1,6 +1,6 @@
 // features/collaboration/client/connection.ts
 
-import { getSocket } from "./socket";
+import { getSocket, setSocketAuth } from "./socket";
 import { eventBus } from "./event-bus";
 import {
   toFSDeleteEventPayload,
@@ -69,6 +69,10 @@ export function connect(
   activeUserId = userId;
   activeUserName = profile?.name?.trim() || null;
   activeUserEmail = profile?.email?.trim() || null;
+
+  setSocketAuth({
+    userId,
+  });
 
   if (!socket.connected) {
     socket.connect();
