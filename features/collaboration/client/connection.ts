@@ -25,6 +25,7 @@ let activeRoomId: string | null = null;
 let activeUserId: string | null = null;
 let activeUserName: string | null = null;
 let activeUserEmail: string | null = null;
+let activeToken: string | null | undefined = undefined;
 let isConnecting = false;
 let hasSnapshot = false;
 let listenersRegistered = false;
@@ -57,7 +58,8 @@ function emitJoinIfReady() {
 export function connect(
   roomId: string,
   userId: string,
-  profile?: { name?: string | null; email?: string | null }
+  profile?: { name?: string | null; email?: string | null },
+  token?: string
 ) {
   if (isConnecting) return;
 
@@ -65,12 +67,23 @@ export function connect(
   hasSnapshot = false;
 
   const socket = getSocket();
+
+  // If token has changed since last connect, force a reconnection
+  // so the socket middleware re-evaluates auth
+  const normalizedToken = token ?? undefined;
+  if (socket.connected && normalizedToken !== activeToken) {
+    console.log("🔄 Token changed, forcing socket reconnection");
+    socket.disconnect();
+  }
+
   activeRoomId = roomId;
   activeUserId = userId;
   activeUserName = profile?.name?.trim() || null;
   activeUserEmail = profile?.email?.trim() || null;
+  activeToken = normalizedToken;
 
   setSocketAuth({
+    token: normalizedToken,
     userId,
   });
 

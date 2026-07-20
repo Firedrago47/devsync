@@ -48,6 +48,7 @@ export default function RoomRouteClient({ roomId }: RoomRouteClientProps) {
       userId={session.user.id}
       userName={session.user.name}
       userEmail={session.user.email}
+      userToken={session.idToken ?? session.authToken ?? null}
     >
       <RoomShellClient
         roomId={roomId}

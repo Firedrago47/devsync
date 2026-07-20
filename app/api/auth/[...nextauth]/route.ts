@@ -1,6 +1,7 @@
 import NextAuth, { type NextAuthOptions, type Account } from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
+import { encode } from "next-auth/jwt";
 import type { JWT } from "next-auth/jwt";
 import type { Session, User } from "next-auth";
 
@@ -34,6 +35,10 @@ export const authOptions: NextAuthOptions = {
       if (account?.access_token) {
         token.accessToken = account.access_token;
       }
+      // Capture provider id_token when available (Google returns id_token JWT)
+      if (account?.id_token) {
+        token.idToken = account.id_token as unknown as string;
+      }
       return token;
     },
 
@@ -47,9 +52,18 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.userId as string;
       }
+
+      const authToken = await encode({
+        token,
+        secret: process.env.NEXTAUTH_SECRET!,
+      });
+
       return {
         ...session,
         accessToken: token.accessToken as string | undefined,
+        authToken: authToken as string | undefined,
+        // Expose provider id_token (if present) for client consumption — this is a standard JWT
+        idToken: token.idToken as string | undefined,
       };
     },
   },

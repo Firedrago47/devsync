@@ -14,6 +14,7 @@ interface CollaborationProviderProps {
   userId: string;
   userName?: string | null;
   userEmail?: string | null;
+  userToken?: string | null;
   children: React.ReactNode;
 }
 
@@ -30,6 +31,7 @@ export default function CollaborationProvider({
   userId,
   userName,
   userEmail,
+  userToken,
   children,
 }: CollaborationProviderProps) {
   const joinedRef = useRef(false);
@@ -52,10 +54,15 @@ export default function CollaborationProvider({
       handlersRegisteredRef.current = true;
     }
 
-    connect(roomId, userId, {
-      name: userName,
-      email: userEmail,
-    });
+    connect(
+      roomId,
+      userId,
+      {
+        name: userName,
+        email: userEmail,
+      },
+      userToken ?? undefined
+    );
     joinedRef.current = true;
 
     return () => {
@@ -77,7 +84,7 @@ export default function CollaborationProvider({
         joinedRef.current = false;
       }
     };
-  }, [roomId, userId, userName, userEmail]);
+  }, [roomId, userId, userName, userEmail, userToken]);
 
   return <>{children}</>;
 }

@@ -1,5 +1,8 @@
 "use client";
 
+// Must be first — configures Monaco loader before any Editor mounts
+import "@/lib/monaco-config";
+
 import Editor, { OnMount } from "@monaco-editor/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Awareness } from "y-protocols/awareness";
