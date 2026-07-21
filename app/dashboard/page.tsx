@@ -22,6 +22,9 @@ import {
   DoorOpen,
   Sparkles,
   User,
+  PersonStandingIcon,
+  ListCollapseIcon,
+  GroupIcon,
 } from "lucide-react";
 
 type DashboardRoom = {
@@ -114,12 +117,12 @@ export default function DashboardPage() {
 
   if (status === "loading") {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-neutral-50 dark:bg-neutral-950">
+      <div className="h-screen flex flex-col items-center justify-center bg-background">
         <div className="relative">
-          <div className="absolute inset-0 rounded-full bg-neutral-200 dark:bg-neutral-800 animate-pulse-subtle blur-xl" />
-          <Loader2 className="h-8 w-8 animate-spin text-neutral-500 dark:text-neutral-400 relative z-10" />
+          <div className="absolute inset-0 rounded-full bg-muted animate-pulse-subtle blur-xl" />
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground relative z-10" />
         </div>
-        <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-4 animate-pulse-subtle">
+        <p className="text-sm text-muted-foreground mt-4 animate-pulse-subtle">
           Loading dashboard
         </p>
       </div>
@@ -156,22 +159,22 @@ export default function DashboardPage() {
   /* ---------- Render ---------- */
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 relative overflow-hidden">
-      {/* ── Ambient Gradient Background ── */}
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* ── Ambient Gradient Background ── (10% accent glow) */}
       <div
         className="absolute inset-0 z-0 animate-ambient"
         style={{
           background:
-            "radial-gradient(ellipse 80% 60% at 20% 20%, oklch(0.9 0 0 / 0.2) 0%, transparent 100%), " +
-            "radial-gradient(ellipse 60% 50% at 80% 80%, oklch(0.85 0 0 / 0.1) 0%, transparent 100%)",
+            "radial-gradient(ellipse 80% 60% at 20% 20%, oklch(0.45 0.14 270 / 0.07) 0%, transparent 100%), " +
+            "radial-gradient(ellipse 60% 50% at 80% 80%, oklch(0.38 0.14 270 / 0.04) 0%, transparent 100%)",
         }}
       />
       <div
         className="dark:block hidden absolute inset-0 z-0 animate-ambient"
         style={{
           background:
-            "radial-gradient(ellipse 80% 60% at 20% 20%, oklch(0.3 0 0 / 0.2) 0%, transparent 100%), " +
-            "radial-gradient(ellipse 60% 50% at 80% 80%, oklch(0.2 0 0 / 0.1) 0%, transparent 100%)",
+            "radial-gradient(ellipse 80% 60% at 20% 20%, oklch(0.55 0.16 270 / 0.1) 0%, transparent 100%), " +
+            "radial-gradient(ellipse 60% 50% at 80% 80%, oklch(0.4 0.14 270 / 0.05) 0%, transparent 100%)",
         }}
       />
 
@@ -180,20 +183,22 @@ export default function DashboardPage() {
 
       {/* ── Content ── */}
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* Header */}
-        <header className="glass glass-border">
+        {/* Header (60% neutral background) */}
+        <header className="bg-background/80 backdrop-blur-md border-b border-border">
           <div className="container mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-md bg-neutral-200 dark:bg-neutral-800">
-                <LayoutDashboard className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
+              {/* 10% accent icon */}
+              <div className="p-1.5 rounded-md bg-primary/10">
+                <LayoutDashboard className="h-4 w-4 text-primary" />
               </div>
-              <h1 className="text-lg font-semibold tracking-tight text-neutral-800 dark:text-neutral-200">
+              <h1 className="text-lg font-semibold tracking-tight text-foreground">
                 Workspace
               </h1>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-neutral-200/50 dark:bg-neutral-800/50 text-xs text-neutral-500 dark:text-neutral-400">
+              {/* 30% secondary chip for email */}
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground text-xs">
                 <User className="h-3 w-3" />
                 {session.user?.email}
               </div>
@@ -202,7 +207,7 @@ export default function DashboardPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => signOut({ callbackUrl: "/auth" })}
-                className="text-neutral-500 hover:text-red-500 dark:text-neutral-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+                className="text-muted-foreground hover:text-destructive dark:hover:text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/10"
               >
                 <LogOut className="h-4 w-4 mr-1" />
                 Logout
@@ -210,12 +215,12 @@ export default function DashboardPage() {
 
               <Toggle
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="border border-neutral-200 dark:border-neutral-800 data-[state=on]:bg-neutral-200 dark:data-[state=on]:bg-neutral-800"
+                className="border-border data-[state=on]:bg-accent"
               >
                 {theme === "dark" ? (
-                  <Sun className="h-4 w-4" />
+                  <Sun className="h-4 w-4 text-muted-foreground" />
                 ) : (
-                  <Moon className="h-4 w-4" />
+                  <Moon className="h-4 w-4 text-muted-foreground" />
                 )}
               </Toggle>
             </div>
@@ -225,23 +230,23 @@ export default function DashboardPage() {
         {/* Main */}
         <main className="flex-1 container mx-auto px-4 py-6 md:py-8">
           <div className="max-w-4xl mx-auto space-y-6 animate-fade-in-up">
-            {/* ── Project Controls ── */}
+            {/* ── Project Controls ── (30% secondary via glass-card) */}
             <div className="glass-card rounded-xl overflow-hidden">
               <div className="p-5 md:p-6">
                 <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                  <h2 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200">
+                  <GroupIcon className="h-4 w-4 text-primary" />
+                  <h2 className="text-lg font-semibold text-foreground">
                     Project Rooms
                   </h2>
                 </div>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-5 ml-6">
+                <p className="text-sm text-muted-foreground mb-5 ml-6">
                   Create or join a collaborative workspace
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Create */}
                   <div className="space-y-3">
-                    <h5 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    <h5 className="text-sm font-medium text-secondary-foreground">
                       Create Room
                     </h5>
                     <div className="focus-ring rounded-lg">
@@ -249,7 +254,7 @@ export default function DashboardPage() {
                         placeholder="Project name"
                         value={projectName}
                         onChange={(e) => setProjectName(e.target.value)}
-                        className="border-neutral-300 dark:border-neutral-700 bg-white/50 dark:bg-neutral-900/50 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="bg-background/50 focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </div>
                     <Button
@@ -268,7 +273,7 @@ export default function DashboardPage() {
 
                   {/* Join */}
                   <div className="space-y-3">
-                    <h5 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    <h5 className="text-sm font-medium text-secondary-foreground">
                       Join Room
                     </h5>
                     <div className="focus-ring rounded-lg">
@@ -276,7 +281,7 @@ export default function DashboardPage() {
                         placeholder="Room ID"
                         value={roomIdInput}
                         onChange={(e) => setRoomIdInput(e.target.value)}
-                        className="border-neutral-300 dark:border-neutral-700 bg-white/50 dark:bg-neutral-900/50 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="bg-background/50 focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </div>
                     <Button
@@ -296,19 +301,19 @@ export default function DashboardPage() {
               </div>
 
               {/* Footer bar */}
-              <div className="px-5 py-3 border-t border-neutral-200/60 dark:border-neutral-800/60 text-xs text-neutral-400 dark:text-neutral-500 flex justify-between bg-neutral-50/50 dark:bg-neutral-900/30">
+              <div className="px-5 py-3 border-t border-border text-xs text-muted-foreground/60 flex justify-between bg-muted/30">
                 <span>Signed in as {session.user?.name}</span>
                 <span>Secure OAuth authentication</span>
               </div>
             </div>
 
-            {/* ── Your Rooms ── */}
+            {/* ── Your Rooms ── (30% secondary via glass-card) */}
             <div className="glass-card rounded-xl overflow-hidden">
               <div className="p-5 md:p-6">
-                <h2 className="text-lg font-semibold text-neutral-800 dark:text-neutral-200 mb-1">
+                <h2 className="text-lg font-semibold text-foreground mb-1">
                   Your Rooms
                 </h2>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-5">
+                <p className="text-sm text-muted-foreground mb-5">
                   Quickly rejoin existing rooms you created or already joined
                 </p>
 
@@ -317,28 +322,28 @@ export default function DashboardPage() {
                     {Array.from({ length: 3 }).map((_, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between rounded-lg border border-neutral-200/60 dark:border-neutral-800/60 px-4 py-3 skeleton-shimmer"
+                        className="flex items-center justify-between rounded-lg border border-border px-4 py-3 skeleton-shimmer"
                       >
                         <div className="min-w-0 flex-1 space-y-2">
-                          <Skeleton className="h-4 w-40 bg-neutral-200 dark:bg-neutral-800" />
-                          <Skeleton className="h-3 w-28 bg-neutral-200 dark:bg-neutral-800" />
+                          <Skeleton className="h-4 w-40 bg-muted" />
+                          <Skeleton className="h-3 w-28 bg-muted" />
                         </div>
-                        <Skeleton className="h-8 w-20 rounded-md bg-neutral-200 dark:bg-neutral-800" />
+                        <Skeleton className="h-8 w-20 rounded-md bg-muted" />
                       </div>
                     ))}
                   </div>
                 )}
 
                 {!roomsLoading && roomsError && (
-                  <div className="text-sm text-red-500 dark:text-red-400 bg-red-50/50 dark:bg-red-950/30 rounded-lg px-4 py-3 border border-red-200/50 dark:border-red-900/50">
+                  <div className="text-sm text-destructive bg-destructive/10 rounded-lg px-4 py-3 border border-destructive/20">
                     {roomsError}
                   </div>
                 )}
 
                 {!roomsLoading && !roomsError && rooms.length === 0 && (
-                  <div className="text-sm text-neutral-400 dark:text-neutral-500 text-center py-8">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-neutral-100 dark:bg-neutral-800 mb-3">
-                      <DoorOpen className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
+                  <div className="text-sm text-muted-foreground text-center py-8">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-3">
+                      <DoorOpen className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <p>No rooms found yet.</p>
                     <p className="text-xs mt-1">
@@ -352,19 +357,19 @@ export default function DashboardPage() {
                     {rooms.map((room, idx) => (
                       <div
                         key={room.id}
-                        className="flex items-center justify-between rounded-lg border border-neutral-200/60 dark:border-neutral-800/60 px-4 py-3 transition-all duration-200 hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-sm hover:-translate-y-0.5 bg-white/30 dark:bg-neutral-900/30"
+                        className="flex items-center justify-between rounded-lg border border-border px-4 py-3 transition-all duration-200 hover:border-primary/30 hover:shadow-sm hover:-translate-y-0.5 bg-background/30"
                         style={{
                           animationDelay: `${idx * 0.05}s`,
                         }}
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 truncate">
+                          <p className="text-sm font-medium text-foreground truncate">
                             {room.name}
                           </p>
-                          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             <span className="font-mono">{room.id.slice(0, 8)}...</span>
                             {" • "}
-                            <span className="uppercase text-[10px] tracking-wider font-medium text-neutral-500 dark:text-neutral-400">
+                            <span className="uppercase text-[10px] tracking-wider font-medium text-primary">
                               {room.role}
                             </span>
                           </p>
