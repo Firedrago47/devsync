@@ -66,9 +66,9 @@
   --border: oklch(0.88 0.01 75);
   --input: oklch(0.88 0.01 75);
   /* 10% — Accent (deep indigo) */
-  --primary: oklch(0.38 0.14 270);
+  --primary: oklch(43.805% 0.10588 256.363);
   --primary-foreground: oklch(0.95 0.01 270);
-  --ring: oklch(0.45 0.14 270);
+  --ring: oklch(51.375% 0.10553 253.592);
   /* Destructive */
   --destructive: oklch(0.577 0.245 27.325);
   /* Charts & sidebar */
@@ -79,12 +79,12 @@
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.94 0.008 75);
   --sidebar-foreground: oklch(0.145 0.01 80);
-  --sidebar-primary: oklch(0.38 0.14 270);
+  --sidebar-primary: oklch(44.763% 0.10136 253.347);
   --sidebar-primary-foreground: oklch(0.95 0.01 270);
   --sidebar-accent: oklch(0.88 0.01 75);
   --sidebar-accent-foreground: oklch(0.2 0.012 70);
   --sidebar-border: oklch(0.88 0.01 75);
-  --sidebar-ring: oklch(0.45 0.14 270);
+  --sidebar-ring: oklch(54.939% 0.09271 240.22);
 }
 
 .dark {
@@ -106,25 +106,25 @@
   --border: oklch(0.28 0.01 70);
   --input: oklch(0.28 0.01 70);
   /* 10% — Accent (deep indigo) */
-  --primary: oklch(0.55 0.16 270);
+  --primary: oklch(62.141% 0.12083 244.709);
   --primary-foreground: oklch(0.12 0.01 270);
-  --ring: oklch(0.55 0.16 270);
+  --ring: oklch(65.734% 0.10894 241.822);
   /* Destructive */
   --destructive: oklch(0.704 0.191 22.216);
   /* Charts & sidebar */
-  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-1: oklch(60.822% 0.17386 251.819);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.18 0.008 70);
   --sidebar-foreground: oklch(0.92 0.005 80);
-  --sidebar-primary: oklch(0.55 0.16 270);
+  --sidebar-primary: oklch(60.784% 0.12813 257.284);
   --sidebar-primary-foreground: oklch(0.12 0.01 270);
   --sidebar-accent: oklch(0.24 0.01 70);
   --sidebar-accent-foreground: oklch(0.92 0.005 80);
   --sidebar-border: oklch(0.28 0.01 70);
-  --sidebar-ring: oklch(0.55 0.16 270);
+  --sidebar-ring: oklch(65.734% 0.10894 241.822);
 }
 
 /* ──────────── Ambient Gradient Background ──────────── */
@@ -254,8 +254,8 @@
   background: linear-gradient(
     135deg,
     oklch(0.2 0.01 80) 0%,
-    oklch(0.38 0.14 270) 50%,
-    oklch(0.45 0.12 270) 100%
+    oklch(55.351% 0.19035 259.296) 50%,
+    oklch(50.259% 0.11273 252.375) 100%
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -266,8 +266,8 @@
   background: linear-gradient(
     135deg,
     oklch(0.92 0.005 80) 0%,
-    oklch(0.55 0.16 270) 50%,
-    oklch(0.45 0.12 270) 100%
+    oklch(62.336% 0.1211 252.925) 50%,
+    oklch(52.688% 0.13764 255.082) 100%
   );
   -webkit-background-clip: text;
   background-clip: text;
